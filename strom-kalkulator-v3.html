@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S.T.R.O.M. – Finanční kalkulačka v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #C9A84C; --gold-light: #E8D5A0; --gold-dark: #8B6914;
+  --navy: #1A2540; --navy-mid: #243058;
+  --cream: #F8F4ED; --cream-dark: #EDE8DF;
+  --green: #1D9E75; --green-bg: #E1F5EE; --green-dark: #0F6E56;
+  --amber: #BA7517; --amber-bg: #FAEEDA;
+  --red: #A32D2D; --red-bg: #FCEBEB;
+  --blue: #185FA5; --blue-bg: #E6F1FB; --blue-dark: #0C447C;
+  --text: #1A2540; --text-muted: #6B7280;
+  --border: rgba(201,168,76,0.22);
+  --radius: 12px; --shadow: 0 4px 24px rgba(26,37,64,0.09);
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+
+/* HEADER */
+.header { background: var(--navy); padding: 1.75rem 2.5rem 1.5rem; display: flex; align-items: center; gap: 1.75rem; position: relative; overflow: hidden; }
+.header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; border-radius:50%; border:40px solid rgba(201,168,76,0.07); }
+.logo-tree { width:50px; height:50px; flex-shrink:0; }
+.header-text h1 { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; color:#fff; letter-spacing:0.02em; }
+.header-text h1 span { color:var(--gold); }
+.header-text p { font-size:11px; color:rgba(255,255,255,0.48); margin-top:3px; font-weight:300; letter-spacing:0.05em; text-transform:uppercase; }
+.header-badge { margin-left:auto; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light); font-size:11px; padding:5px 13px; border-radius:20px; z-index:1; white-space:nowrap; }
+
+/* MODE BAR */
+.mode-bar { background:var(--navy-mid); padding:0 2.5rem; display:flex; align-items:center; border-bottom:1px solid rgba(201,168,76,0.12); }
+.mode-btn { padding:11px 20px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; color:rgba(255,255,255,0.42); background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; transition:all 0.2s; letter-spacing:0.03em; display:flex; align-items:center; gap:6px; }
+.mode-btn:hover { color:rgba(255,255,255,0.72); }
+.mode-btn.active { color:var(--gold-light); border-bottom-color:var(--gold); }
+.mode-divider { width:1px; height:18px; background:rgba(255,255,255,0.1); margin:0 3px; }
+
+/* LAYOUT */
+.main { max-width:1090px; margin:0 auto; padding:1.75rem 1.5rem 3rem; display:grid; grid-template-columns:350px 1fr; gap:1.5rem; align-items:start; }
+
+/* PANEL */
+.panel { background:#fff; border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+.panel-header { background:var(--navy); padding:12px 17px; display:flex; align-items:center; gap:8px; }
+.panel-header svg { color:var(--gold); flex-shrink:0; }
+.panel-header span { font-family:'Playfair Display',serif; font-size:13px; color:#fff; letter-spacing:0.02em; }
+.panel-body { padding:17px; }
+
+/* SCENARIO */
+.scenario-row { display:flex; gap:6px; margin-bottom:16px; }
+.sc-btn { flex:1; padding:7px 4px; border:1px solid var(--border); background:transparent; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:all 0.18s; }
+.sc-btn:hover { background:var(--cream); color:var(--text); }
+.sc-btn.active { background:var(--navy); color:var(--gold-light); border-color:var(--navy); }
+
+/* FINANCE MODEL EXPLAINER */
+.model-explainer { background:var(--navy); border-radius:10px; padding:13px 14px; margin-bottom:15px; }
+.model-explainer-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.45); margin-bottom:10px; }
+.flow-row { display:flex; align-items:center; gap:0; margin-bottom:0; }
+.flow-box { flex:1; text-align:center; padding:7px 4px; border-radius:7px; }
+.flow-box .fb-pct { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; line-height:1; }
+.flow-box .fb-label { font-size:9px; margin-top:3px; line-height:1.3; }
+.flow-box.state { background:rgba(29,158,117,0.18); }
+.flow-box.state .fb-pct { color:#6EDBB9; }
+.flow-box.state .fb-label { color:rgba(110,219,185,0.7); }
+.flow-box.obec { background:rgba(201,168,76,0.18); }
+.flow-box.obec .fb-pct { color:var(--gold-light); }
+.flow-box.obec .fb-label { color:rgba(232,213,160,0.7); }
+.flow-box.nadace { background:rgba(24,95,165,0.25); }
+.flow-box.nadace .fb-pct { color:#7BB8F5; }
+.flow-box.nadace .fb-label { color:rgba(123,184,245,0.7); }
+.flow-arrow { color:rgba(255,255,255,0.2); font-size:14px; padding:0 3px; flex-shrink:0; }
+.bridge-note { margin-top:10px; font-size:10px; color:rgba(255,255,255,0.45); background:rgba(255,255,255,0.05); border-radius:6px; padding:7px 9px; line-height:1.5; border-left:2px solid rgba(201,168,76,0.4); }
+
+/* REKON BLOCK */
+.rekon-block { background:var(--blue-bg); border:1px solid rgba(24,95,165,0.18); border-radius:10px; padding:13px; margin-bottom:14px; }
+.rekon-block-title { font-size:10px; font-weight:500; letter-spacing:0.07em; text-transform:uppercase; color:var(--blue); margin-bottom:9px; display:flex; align-items:center; gap:5px; }
+.condition-btns { display:flex; gap:5px; }
+.cond-btn { flex:1; padding:6px 4px; border:1px solid rgba(24,95,165,0.22); background:#fff; border-radius:7px; font-size:11px; font-weight:500; color:var(--blue); cursor:pointer; transition:all 0.18s; text-align:center; }
+.cond-btn:hover { background:rgba(24,95,165,0.07); }
+.cond-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+.cond-note { margin-top:7px; font-size:10px; color:var(--blue-dark); line-height:1.5; }
+.legal-select-wrap { margin-top:10px; }
+.legal-select-wrap label { font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; }
+.legal-select-wrap select { width:100%; padding:7px 10px; border:1px solid rgba(24,95,165,0.22); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--text); background:#fff; outline:none; cursor:pointer; }
+.legal-note { margin-top:7px; font-size:10px; color:var(--blue-dark); background:rgba(24,95,165,0.07); border-radius:6px; padding:7px 9px; line-height:1.5; }
+
+/* SLIDERS */
+.group-label { font-size:10px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold-dark); margin:14px 0 8px; display:flex; align-items:center; gap:6px; }
+.group-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.slider-row { display:flex; flex-direction:column; margin-bottom:9px; }
+.slider-top { display:flex; justify-content:space-between; align-items:center; }
+.slider-label { font-size:12px; color:var(--text-muted); line-height:1.3; }
+.slider-val { font-size:12px; font-weight:500; color:var(--navy); white-space:nowrap; padding-left:8px; }
+input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:4px; background:var(--cream-dark); border-radius:2px; outline:none; margin-top:5px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--navy); border:2px solid var(--gold); cursor:pointer; transition:transform 0.1s; }
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+input[type=range]::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:var(--navy); border:2px solid var(--gold); cursor:pointer; }
+
+/* BRIDGE PARAMS */
+.bridge-params { background:var(--cream); border-radius:8px; padding:11px 13px; margin-top:12px; }
+.bridge-params-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.07em; color:var(--amber); margin-bottom:9px; display:flex; align-items:center; gap:5px; }
+
+/* FINANCE SUMMARY */
+.finance-sum { background:var(--cream); border-radius:8px; padding:10px 12px; margin-top:13px; font-size:12px; }
+.finance-sum-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.finance-sum-row:last-child { margin-bottom:0; border-top:1px solid var(--border); padding-top:6px; margin-top:4px; font-weight:500; }
+.dot { width:8px; height:8px; border-radius:2px; display:inline-block; margin-right:5px; flex-shrink:0; }
+.warning { background:var(--amber-bg); border-left:3px solid var(--amber); border-radius:6px; padding:8px 10px; font-size:11px; color:var(--amber); margin-top:10px; display:none; }
+
+/* FUND SOURCE SELECTOR */
+.fund-source-block { background:var(--navy); border-radius:10px; padding:13px 14px; margin-bottom:14px; }
+.fund-source-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.45); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.fund-source-btns { display:flex; gap:5px; }
+.fs-btn { flex:1; padding:7px 6px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); border-radius:7px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.18s; text-align:center; line-height:1.4; }
+.fs-btn:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); }
+.fs-btn.active { background:rgba(201,168,76,0.25); color:var(--gold-light); border-color:rgba(201,168,76,0.4); }
+.fund-source-desc { margin-top:9px; font-size:10px; color:rgba(255,255,255,0.45); line-height:1.6; border-left:2px solid rgba(201,168,76,0.3); padding-left:8px; }
+.fund-source-split { display:flex; gap:6px; margin-top:8px; }
+.fund-source-split-item { flex:1; background:rgba(255,255,255,0.05); border-radius:6px; padding:6px 8px; }
+.fund-source-split-item .fss-label { font-size:9px; color:rgba(255,255,255,0.4); margin-bottom:3px; }
+.fund-source-split-item .fss-val { font-family:'Playfair Display',serif; font-size:13px; color:var(--gold-light); font-weight:600; }
+
+/* RESULTS */
+.results-col { display:flex; flex-direction:column; gap:1.25rem; }
+
+/* COMPARE BANNER */
+.compare-banner { background:var(--navy); border-radius:var(--radius); padding:15px 18px; display:none; }
+.compare-banner.visible { display:block; }
+.compare-banner-title { font-size:10px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:11px; }
+.compare-grid { display:grid; grid-template-columns:1fr 1px 1fr; }
+.compare-divider { background:rgba(255,255,255,0.09); }
+.compare-col { padding:0 16px; }
+.compare-col:first-child { padding-left:0; }
+.compare-col-title { font-size:12px; font-weight:500; color:var(--gold-light); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.compare-row { display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.55); padding:3px 0; }
+.compare-row span:last-child { font-weight:500; color:rgba(255,255,255,0.88); }
+.compare-row.highlight span:last-child { color:#6EDBB9; font-family:'Playfair Display',serif; font-size:13px; }
+
+/* METRICS */
+.metrics-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.metric-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:14px 15px; box-shadow:var(--shadow); }
+.metric-card.accent { background:var(--navy); border-color:var(--navy); }
+.metric-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:5px; }
+.metric-card.accent .metric-label { color:rgba(255,255,255,0.45); }
+.metric-val { font-family:'Playfair Display',serif; font-size:19px; font-weight:600; color:var(--navy); line-height:1.1; }
+.metric-card.accent .metric-val { color:var(--gold-light); }
+.metric-sub { font-size:10px; color:var(--text-muted); margin-top:3px; line-height:1.4; }
+.metric-card.accent .metric-sub { color:rgba(255,255,255,0.38); }
+.metric-val.pos { color:var(--green); }
+.metric-val.neg { color:var(--red); }
+.metric-saving { font-size:10px; color:var(--green-dark); font-weight:500; margin-top:4px; }
+
+/* BRIDGE INFO CARD */
+.bridge-card { background:var(--amber-bg); border:1px solid rgba(186,117,23,0.2); border-radius:var(--radius); padding:13px 16px; display:flex; gap:13px; align-items:flex-start; }
+.bridge-card-icon { font-size:22px; flex-shrink:0; line-height:1; margin-top:2px; }
+.bridge-card-body { flex:1; }
+.bridge-card-title { font-size:12px; font-weight:500; color:var(--amber); margin-bottom:4px; }
+.bridge-card-text { font-size:11px; color:var(--amber); line-height:1.6; opacity:0.85; }
+.bridge-stats { display:flex; gap:16px; margin-top:8px; flex-wrap:wrap; }
+.bridge-stat { font-size:11px; color:var(--amber); }
+.bridge-stat strong { font-family:'Playfair Display',serif; font-size:14px; font-weight:600; display:block; line-height:1.1; color:var(--amber); }
+
+/* FIN TABLE */
+.fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.fin-col { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:13px 15px; box-shadow:var(--shadow); }
+.fin-col-title { font-size:11px; font-weight:500; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-muted); margin-bottom:9px; display:flex; align-items:center; gap:5px; }
+.dot-lg { width:10px; height:10px; border-radius:3px; }
+.fin-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:5px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:var(--text-muted); }
+.fin-row:last-child { border-bottom:none; border-top:1px solid var(--border); margin-top:4px; padding-top:8px; font-weight:500; font-size:13px; color:var(--text); }
+.fin-row span:last-child { font-weight:500; color:var(--text); }
+.fin-row.highlight { background:rgba(29,158,117,0.05); border-radius:4px; padding:5px 6px; margin:2px -6px; }
+.fin-row.highlight span { color:var(--green-dark); font-weight:500; }
+
+/* CHART */
+.chart-panel { background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:17px; }
+.chart-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:13px; }
+.chart-title { font-family:'Playfair Display',serif; font-size:14px; color:var(--navy); }
+.chart-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.chart-legend { display:flex; gap:14px; font-size:11px; color:var(--text-muted); align-items:center; }
+.legend-item { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:10px; height:10px; border-radius:2px; }
+.chart-wrap { position:relative; height:225px; }
+
+/* TAGS */
+.tags-panel { background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:13px 17px; }
+.tags-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:9px; }
+.tags-wrap { display:flex; flex-wrap:wrap; gap:7px; }
+.tag { font-size:11px; padding:4px 11px; border-radius:20px; font-weight:500; display:flex; align-items:center; gap:4px; }
+.tag.green { background:var(--green-bg); color:var(--green-dark); }
+.tag.amber { background:var(--amber-bg); color:var(--amber); }
+.tag.red { background:var(--red-bg); color:var(--red); }
+.tag.blue { background:var(--blue-bg); color:var(--blue-dark); }
+
+.footer { text-align:center; padding:1rem 1.5rem 2rem; font-size:11px; color:var(--text-muted); }
+.footer strong { color:var(--gold-dark); }
+
+@media (max-width:820px) {
+  .main { grid-template-columns:1fr; }
+  .metrics-grid { grid-template-columns:repeat(2,1fr); }
+  .fin-grid { grid-template-columns:1fr; }
+  .header { padding:1.5rem; gap:1rem; }
+  .header-badge { display:none; }
+  .mode-bar { padding:0 1rem; }
+  .compare-grid { grid-template-columns:1fr; }
+  .compare-divider { display:none; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <svg class="logo-tree" viewBox="0 0 56 56" fill="none">
+    <circle cx="28" cy="28" r="28" fill="rgba(201,168,76,0.12)"/>
+    <path d="M28 8C20 14 14 20 18 26C14 24 10 28 14 32C10 30 8 36 14 38C18 40 22 38 24 36L24 48L32 48L32 36C34 38 38 40 42 38C48 36 46 30 42 32C46 28 42 24 38 26C42 20 36 14 28 8Z" fill="#C9A84C" opacity="0.9"/>
+  </svg>
+  <div class="header-text">
+    <h1><span>S.T.R.O.M.</span> – Finanční kalkulačka</h1>
+    <p>Golden Blot cz. Nadační fond &nbsp;·&nbsp; Pilotní projekt seniorského domu</p>
+  </div>
+  <div class="header-badge">Verze 3.0 · 2026</div>
+</header>
+
+<div class="mode-bar">
+  <button class="mode-btn active" id="btn-novostavba" onclick="setMode('novostavba')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Novostavba
+  </button>
+  <div class="mode-divider"></div>
+  <button class="mode-btn" id="btn-rekonstrukce" onclick="setMode('rekonstrukce')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Rekonstrukce obecní budovy
+  </button>
+  <div class="mode-divider"></div>
+  <button class="mode-btn" id="btn-porovnani" onclick="setMode('porovnani')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    Porovnání modelů
+  </button>
+</div>
+
+<main class="main">
+<aside>
+  <div class="panel">
+    <div class="panel-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>Parametry projektu</span>
+    </div>
+    <div class="panel-body">
+
+      <!-- FINANCE MODEL EXPLAINER -->
+      <div class="model-explainer">
+        <div class="model-explainer-title">Model financování CAPEX</div>
+        <div class="flow-row">
+          <div class="flow-box state">
+            <div class="fb-pct" id="exp-state">60 %</div>
+            <div class="fb-label">Státní dotace</div>
+          </div>
+          <div class="flow-arrow">+</div>
+          <div class="flow-box obec">
+            <div class="fb-pct" id="exp-obec">25 %</div>
+            <div class="fb-label">Obec / kraj</div>
+          </div>
+          <div class="flow-arrow">+</div>
+          <div class="flow-box nadace">
+            <div class="fb-pct" id="exp-nadace">15 %</div>
+            <div class="fb-label" id="exp-nadace-label">Nadační fond</div>
+          </div>
+        </div>
+        <div class="bridge-note" id="bridge-note-main">
+          Banka vstupuje pouze jako <strong style="color:var(--gold-light)">bridge (překlenovací úvěr)</strong> – předfinancuje dotace do jejich proplacení. Po proplacení se splatí. Nesouvisí s provozním cash flow.
+        </div>
+      </div>
+
+      <div class="scenario-row">
+        <button class="sc-btn active" onclick="loadScenario('conservative',this)">Konzervativní</button>
+        <button class="sc-btn" onclick="loadScenario('base',this)">Základní</button>
+        <button class="sc-btn" onclick="loadScenario('optimistic',this)">Optimistický</button>
+      </div>
+
+      <!-- REKONSTRUKCE BLOCK -->
+      <div class="rekon-block" id="rekon-block" style="display:none">
+        <div class="rekon-block-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Obecní nemovitost
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Stav objektu před rekonstrukcí</div>
+        <div class="condition-btns">
+          <button class="cond-btn" id="cond-dobry" onclick="setCondition('dobry')">Dobrý</button>
+          <button class="cond-btn active" id="cond-prumerny" onclick="setCondition('prumerny')">Průměrný</button>
+          <button class="cond-btn" id="cond-spatny" onclick="setCondition('spatny')">Špatný</button>
+        </div>
+        <div class="cond-note" id="cond-note"></div>
+        <div class="legal-select-wrap">
+          <label>Právní vztah k nemovitosti</label>
+          <select id="legal-form" onchange="recalc()">
+            <option value="pronajem">Dlouhodobý pronájem (1 Kč/rok, 25+ let)</option>
+            <option value="vypujcka">Výpůjčka (bezúplatná)</option>
+            <option value="sprava">Svěření do správy NNO</option>
+            <option value="prodej">Prodej za symbolickou cenu</option>
+          </select>
+        </div>
+        <div class="legal-note" id="legal-note"></div>
+      </div>
+
+      <div class="group-label">Projekt</div>
+
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Počet bytových jednotek (na 1 objekt)</span><span class="slider-val" id="units-out">30 bytů</span></div>
+        <input type="range" id="units" min="10" max="80" step="1" value="30" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Počet objektů / lokalit</span><span class="slider-val" id="props-out">1 objekt</span></div>
+        <input type="range" id="props" min="1" max="20" step="1" value="1" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Průměrný nájem + služby</span><span class="slider-val" id="rent-out">12 000 Kč</span></div>
+        <input type="range" id="rent" min="7000" max="20000" step="500" value="12000" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Obsazenost</span><span class="slider-val" id="occupancy-out">90 %</span></div>
+        <input type="range" id="occupancy" min="50" max="100" step="1" value="90" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Příspěvek na péči (stát/senior/měs.)</span><span class="slider-val" id="care-out">3 500 Kč</span></div>
+        <input type="range" id="care" min="0" max="8000" step="500" value="3500" oninput="recalc()">
+      </div>
+
+      <div class="group-label">Doplňkové příjmy (roční)</div>
+
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Služby pro veřejnost (jídelna, rehabilitace…)</span><span class="slider-val" id="rev-public-out">0 Kč</span></div>
+        <input type="range" id="rev-public" min="0" max="1500000" step="50000" value="0" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Pronájem nebytových prostor</span><span class="slider-val" id="rev-rent-out">0 Kč</span></div>
+        <input type="range" id="rev-rent" min="0" max="600000" step="10000" value="0" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Denní stacionář / respitní péče</span><span class="slider-val" id="rev-daycare-out">0 Kč</span></div>
+        <input type="range" id="rev-daycare" min="0" max="2400000" step="50000" value="0" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">ESG sponzoring + dary od firem</span><span class="slider-val" id="rev-esg-out">0 Kč</span></div>
+        <input type="range" id="rev-esg" min="0" max="1200000" step="50000" value="0" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Příjmy z energetiky (FVE / přebytek)</span><span class="slider-val" id="rev-energy-out">0 Kč</span></div>
+        <input type="range" id="rev-energy" min="0" max="300000" step="10000" value="0" oninput="recalc()">
+      </div>
+
+      <div class="group-label">Reinvestice z Bakalářů J&L</div>
+
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 13px;margin-bottom:8px;">
+        <div style="font-size:10px;color:var(--amber);font-weight:500;margin-bottom:8px;line-height:1.5;">
+          95 % DMS → charita (zákon) → Golden Blot NF → přesun na S.T.R.O.M. výstavbu.<br>
+          <span style="opacity:0.7">Tyto prostředky jsou součástí provozního přebytku a slouží k reinvestici do dalších projektů.</span>
+        </div>
+        <div class="slider-row" style="margin-bottom:7px;">
+          <div class="slider-top"><span class="slider-label">Obrat Bakalářů CZ (mil. Kč/rok)</span><span class="slider-val" id="bk-obrat-out2">420</span></div>
+          <input type="range" id="bk-obrat2" min="50" max="690" step="10" value="420" oninput="updateBakalarRev()">
+        </div>
+        <div class="slider-row" style="margin-bottom:8px;">
+          <div class="slider-top"><span class="slider-label">Podíl reinvestovaný do výstavby</span><span class="slider-val" id="bk-podil-out2">50 %</span></div>
+          <input type="range" id="bk-podil2" min="10" max="90" step="5" value="50" oninput="updateBakalarRev()">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;" id="bk-results2"></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Reinvestice z Bakalářů (Kč/rok pro <span id="bk-props-label">1 objekt</span>)</span><span class="slider-val" id="rev-bakalar-out">0 Kč</span></div>
+        <input type="range" id="rev-bakalar" min="0" max="50000000" step="500000" value="0" oninput="recalc()" style="pointer-events:none;opacity:0.4" disabled>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px;" id="bk-per-project-note"></div>
+      </div>
+
+      <!-- FUND SOURCE SELECTOR -->
+      <div class="fund-source-block">
+        <div class="fund-source-title">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Zdroj 15 % nadačního podílu
+        </div>
+        <div class="fund-source-btns">
+          <button class="fs-btn active" id="fs-voucher" onclick="setFundSource('voucher')">Komunitní vouchery<br><span style="font-size:9px;opacity:0.7">dárci z veřejnosti</span></button>
+          <button class="fs-btn" id="fs-bakalar" onclick="setFundSource('bakalar')">Bakaláři J&L<br><span style="font-size:9px;opacity:0.7">reinvestice výnosů</span></button>
+          <button class="fs-btn" id="fs-mix" onclick="setFundSource('mix')">Kombinace<br><span style="font-size:9px;opacity:0.7">oba zdroje</span></button>
+        </div>
+        <div class="fund-source-desc" id="fs-desc"></div>
+        <div class="fund-source-split" id="fs-split" style="display:none">
+          <div class="fund-source-split-item"><div class="fss-label">Komunitní vouchery</div><div class="fss-val" id="fs-split-voucher">50 %</div></div>
+          <div class="fund-source-split-item"><div class="fss-label">Bakaláři J&L</div><div class="fss-val" id="fs-split-bakalar">50 %</div></div>
+        </div>
+
+        <!-- BAKALÁŘI LIVE CALCULATOR – shown when bakalar or mix selected -->
+        <div id="fs-bakalar-calc" style="display:none; margin-top:10px; background:rgba(201,168,76,0.08); border-radius:8px; padding:10px 11px; border:1px solid rgba(201,168,76,0.2);">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Výpočet – Bakaláři J&L → S.T.R.O.M.</div>
+          <div class="slider-row" style="margin-bottom:7px;">
+            <div class="slider-top"><span class="slider-label" style="color:rgba(255,255,255,0.5);font-size:11px">Obrat Bakalářů CZ (mil. Kč/rok)</span><span class="slider-val" style="color:var(--gold-light);font-size:11px" id="bk-obrat-out">420</span></div>
+            <input type="range" id="bk-obrat" min="50" max="690" step="10" value="420" oninput="updateBakalarCalc()">
+          </div>
+          <div class="slider-row" style="margin-bottom:8px;">
+            <div class="slider-top"><span class="slider-label" style="color:rgba(255,255,255,0.5);font-size:11px">Podíl směřující do výstavby (%)</span><span class="slider-val" style="color:var(--gold-light);font-size:11px" id="bk-podil-out">50 %</span></div>
+            <input type="range" id="bk-podil" min="10" max="90" step="5" value="50" oninput="updateBakalarCalc()">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bk-results"></div>
+        </div>
+
+        <div class="slider-row" id="fs-mix-slider" style="display:none; margin-top:8px;">
+          <div class="slider-top"><span class="slider-label" style="color:rgba(255,255,255,0.5);font-size:11px">Podíl Bakalářů (zbytek = vouchery)</span><span class="slider-val" style="color:var(--gold-light);font-size:11px" id="fs-mix-out">50 %</span></div>
+          <input type="range" id="fs-mix-range" min="10" max="90" step="10" value="50" oninput="updateMixSlider()">
+        </div>
+      </div>
+
+      <div class="group-label">Struktura dotací (% z CAPEX)</div>
+
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Státní dotace (SFPI, MMR, EU…)</span><span class="slider-val" id="dot-state-out">60 %</span></div>
+        <input type="range" id="dot-state" min="20" max="75" step="1" value="60" oninput="recalc()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-top"><span class="slider-label">Dotace obec / kraj</span><span class="slider-val" id="dot-obec-out">25 %</span></div>
+        <input type="range" id="dot-obec" min="0" max="40" step="1" value="25" oninput="recalc()">
+      </div>
+
+      <div class="group-label">Bridge financování (dočasné)</div>
+
+      <div class="bridge-params">
+        <div class="bridge-params-title">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Překlenovací úvěr – splatí se z dotací
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Úroková sazba bridge úvěru</span><span class="slider-val" id="bridge-rate-out">5,5 %</span></div>
+          <input type="range" id="bridge-rate" min="3" max="10" step="0.1" value="5.5" oninput="recalc()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Délka bridge (měsíce čekání na dotace)</span><span class="slider-val" id="bridge-months-out">18 měs.</span></div>
+          <input type="range" id="bridge-months" min="6" max="36" step="1" value="18" oninput="recalc()">
+        </div>
+      </div>
+
+      <div class="finance-sum" id="finance-sum"></div>
+      <div class="warning" id="warning">⚠ Dotace státu + obce překračují 100 %. Upravte prosím podíly.</div>
+    </div>
+  </div>
+</aside>
+
+<div class="results-col">
+
+  <!-- Compare banner -->
+  <div class="compare-banner" id="compare-banner">
+    <div class="compare-banner-title" id="compare-banner-title">Přímé porovnání modelů</div>
+    <div class="compare-grid" id="compare-grid"></div>
+  </div>
+
+  <!-- Bridge info card -->
+  <div class="bridge-card" id="bridge-card">
+    <div class="bridge-card-icon">🏦</div>
+    <div class="bridge-card-body">
+      <div class="bridge-card-title">Bridge úvěr – jednorázový náklad, ne trvalá zátěž</div>
+      <div class="bridge-card-text">Banka předfinancuje dotace po dobu jejich čerpání. Po proplacení se úvěr splatí. Do provozního cash flow nevstupuje. Jedinou skutečnou zátěží je <strong>úrok za dobu čekání</strong> – ten je jednorázový a zahrnutý v CAPEX.</div>
+      <div class="bridge-stats" id="bridge-stats"></div>
+    </div>
+  </div>
+
+  <div class="metrics-grid" id="metrics-grid"></div>
+  <div class="fin-grid" id="fin-grid"></div>
+
+  <div class="chart-panel">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Kumulativní provozní cash flow</div>
+        <div class="chart-sub">10letý výhled – bez splátky úvěru (bridge splacen z dotací)</div>
+      </div>
+      <div class="chart-legend" id="chart-legend"></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="cfChart" role="img" aria-label="Kumulativní cash flow projektu v prvních 10 letech provozu"></canvas>
+    </div>
+  </div>
+
+  <div class="tags-panel">
+    <div class="tags-title">Hodnocení projektu</div>
+    <div class="tags-wrap" id="tags-wrap"></div>
+  </div>
+</div>
+</main>
+
+<footer class="footer">
+  <strong>Golden Blot cz. Nadační fond</strong> &nbsp;·&nbsp; Kaprova 42/14, Staré Město, 110 00 Praha 1 &nbsp;·&nbsp;
+  Orientační model. Skutečné náklady závisí na lokalitě, stavu objektu a podmínkách financování.
+</footer>
+
+<script>
+let cfChart = null;
+let currentMode = 'novostavba';
+let currentCondition = 'prumerny';
+let currentScenarioName = 'base';
+let currentFundSource = 'voucher';  // 'voucher' | 'bakalar' | 'mix'
+
+const fundSourceConfig = {
+  voucher: {
+    label: 'Komunitní vouchery',
+    color: '#7BB8F5',
+    desc: 'Dárci z veřejnosti nabíjejí participativní vouchery Golden Blot. Každý voucher = přímý vklad do projektu. Dárce získává morální satisfakci + slosování o ceny (bez sdíleného zisku). Minimální vstup od 500 Kč.',
+    nadaceLabel: '15 % – Komunitní vouchery'
+  },
+  bakalar: {
+    label: 'Bakaláři J&L',
+    color: '#C9A84C',
+    desc: 'Ze zákona jde 95 % každého DMS na charitu – příjemcem je Golden Blot nadační fond. Přesun na účet S.T.R.O.M. = interní charitativní tok (účetně dar mezi dvěma účty téhož NF). Počítáme s 50 % z těchto prostředků pro výstavbu. Při obratu CZ 420 mil. Kč/rok: 95 % = 399 mil. → 50 % = ~200 mil. Kč/rok dostupných pro projekty.',
+    nadaceLabel: '15 % – Bakaláři J&L (95 % DMS → 50 % na výstavbu)'
+  },
+  mix: {
+    label: 'Kombinace obou zdrojů',
+    color: '#6EDBB9',
+    desc: 'Kombinace komunitních voucherů a charitativního toku z Bakalářů (95 % DMS → 50 % na výstavbu S.T.R.O.M.). Diverzifikuje zdroj – projekt není závislý jen na veřejných dárcích ani jen na výkonu Bakalářů.',
+    nadaceLabel: '15 % – Vouchery + Bakaláři J&L'
+  }
+};
+
+// Condition params: cost per m² for reconstruction
+const conditionParams = {
+  dobry:    { costPerM2: 24000, reservePct: 0.10, label: 'Dobrý stav – rekonstrukce ~24 000 Kč/m². Nízké riziko skrytých závad. 10% rezerva.' },
+  prumerny: { costPerM2: 32000, reservePct: 0.15, label: 'Průměrný stav – rekonstrukce ~32 000 Kč/m². Doporučena 15% rezerva na nepředvídané.' },
+  spatny:   { costPerM2: 41000, reservePct: 0.22, label: 'Špatný stav – rekonstrukce ~41 000 Kč/m². Nutný stavebně-technický průzkum. 22% rezerva.' }
+};
+
+const legalNotes = {
+  pronajem: '✓ Vhodné pro bridge banku – zástavní právo na pohledávky z nájmů. Nutný souhlas zastupitelů a zápis do katastru.',
+  vypujcka: '⚠ Problematické pro bridge banku – nelze zřídit zástavní právo k nemovitosti. Vhodné jen při velmi malé bankovní tranši.',
+  sprava:   '⚠ Omezuje komerční prvky projektu. Vhodné pro čistě neziskový provoz bez bankovního financování.',
+  prodej:   '✓ Nejlepší pro banku – standardní zástavní právo k nemovitosti. Politicky nejnáročnější cesta v zastupitelstvu.'
+};
+
+// Separate scenarios for each mode with meaningfully different values
+const scenarios = {
+  novostavba: {
+    conservative: { units: 15, rent:  9000, occupancy: 70, care: 1500, dotState: 48, dotObec: 18, bridgeRate: 6.5, bridgeMonths: 30 },
+    base:         { units: 30, rent: 12000, occupancy: 88, care: 3500, dotState: 60, dotObec: 25, bridgeRate: 5.5, bridgeMonths: 18 },
+    optimistic:   { units: 50, rent: 14500, occupancy: 95, care: 5500, dotState: 65, dotObec: 20, bridgeRate: 4.5, bridgeMonths: 12 }
+  },
+  rekonstrukce: {
+    // Rekonstrukce: nižší CAPEX (obecní budova), vyšší dotační podíl, kratší bridge
+    conservative: { units: 15, rent:  9000, occupancy: 70, care: 1500, dotState: 52, dotObec: 22, bridgeRate: 6.0, bridgeMonths: 28 },
+    base:         { units: 30, rent: 12000, occupancy: 88, care: 3500, dotState: 63, dotObec: 22, bridgeRate: 5.0, bridgeMonths: 16 },
+    optimistic:   { units: 50, rent: 14500, occupancy: 95, care: 5500, dotState: 68, dotObec: 17, bridgeRate: 4.0, bridgeMonths: 10 }
+  }
+};
+
+function fmtM(n) {
+  const v = Math.round(n / 100000) / 10;
+  return v.toFixed(1).replace('.', ',') + ' mil. Kč';
+}
+function fmtK(n) { return Math.round(n).toLocaleString('cs-CZ') + ' Kč'; }
+
+function setMode(mode) {
+  currentMode = mode;
+  ['novostavba','rekonstrukce','porovnani'].forEach(m => {
+    document.getElementById('btn-' + m).classList.toggle('active', m === mode);
+  });
+  document.getElementById('rekon-block').style.display = (mode === 'rekonstrukce') ? 'block' : 'none';
+  document.getElementById('compare-banner').classList.toggle('visible', mode === 'porovnani');
+
+  // Load appropriate base scenario on mode switch
+  const srcMode = (mode === 'porovnani') ? 'novostavba' : mode;
+  applyScenario(scenarios[srcMode].base);
+  currentScenarioName = 'base';
+  // Reset scenario buttons to "base"
+  document.querySelectorAll('.sc-btn').forEach((b, i) => b.classList.toggle('active', i === 1));
+  recalc();
+}
+
+function setCondition(c) {
+  currentCondition = c;
+  ['dobry','prumerny','spatny'].forEach(x => {
+    document.getElementById('cond-' + x).classList.toggle('active', x === c);
+  });
+  document.getElementById('cond-note').textContent = conditionParams[c].label;
+  recalc();
+}
+
+function setFundSource(src) {
+  currentFundSource = src;
+  ['voucher','bakalar','mix'].forEach(x => {
+    document.getElementById('fs-' + x).classList.toggle('active', x === src);
+  });
+  const cfg = fundSourceConfig[src];
+  document.getElementById('fs-desc').textContent = cfg.desc;
+  document.getElementById('fs-mix-slider').style.display = src === 'mix' ? 'flex' : 'none';
+  document.getElementById('fs-split').style.display = src === 'mix' ? 'flex' : 'none';
+  document.getElementById('fs-bakalar-calc').style.display = (src === 'bakalar' || src === 'mix') ? 'block' : 'none';
+  if (src === 'bakalar' || src === 'mix') updateBakalarCalc();
+  // Update explainer box label
+  const nadaceLabel = document.getElementById('exp-nadace-label');
+  if (nadaceLabel) {
+    if (src === 'voucher') nadaceLabel.textContent = 'Vouchery dárci';
+    else if (src === 'bakalar') nadaceLabel.textContent = 'Bakaláři J&L';
+    else nadaceLabel.textContent = 'Vouchery + Bakaláři';
+  }
+  // Update explainer box color
+  const nadaceBox = document.querySelector('.flow-box.nadace');
+  if (nadaceBox) nadaceBox.style.background = src === 'bakalar' ? 'rgba(201,168,76,0.2)' : src === 'mix' ? 'rgba(110,219,185,0.15)' : 'rgba(24,95,165,0.25)';
+  updateMixSlider();
+  recalc();
+}
+
+function updateBakalarRev() {
+  const obrat = +document.getElementById('bk-obrat2').value;
+  const podil = +document.getElementById('bk-podil2').value / 100;
+  const props = +(document.getElementById('props').value) || 1;
+
+  document.getElementById('bk-obrat-out2').textContent = obrat;
+  document.getElementById('bk-podil-out2').textContent = Math.round(podil * 100) + ' %';
+
+  const charita      = obrat * 1000000 * 0.95;
+  const proVystavbu  = charita * podil;
+  const perProject   = proVystavbu / props;
+  const pocetProjektu = proVystavbu / 14000000;
+
+  const fmtMil = n => (n / 1000000).toFixed(0) + ' mil. Kč';
+
+  document.getElementById('bk-results2').innerHTML = `
+    <div style="flex:1;min-width:70px;background:rgba(0,0,0,0.15);border-radius:6px;padding:5px 7px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:2px;">95 % DMS → charita</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;color:#6EDBB9;font-weight:600;">${fmtMil(charita)}</div>
+    </div>
+    <div style="flex:1;min-width:70px;background:rgba(201,168,76,0.15);border-radius:6px;padding:5px 7px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:2px;">Pro výstavbu S.T.R.O.M.</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;color:var(--gold-light);font-weight:600;">${fmtMil(proVystavbu)}</div>
+    </div>
+    <div style="flex:1;min-width:70px;background:rgba(0,0,0,0.15);border-radius:6px;padding:5px 7px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:2px;">Nové projekty / rok</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;color:#7BB8F5;font-weight:600;">${pocetProjektu.toFixed(1)}</div>
+    </div>
+  `;
+
+  // Store TOTAL fixed sum - same regardless of number of objects
+  const revBaklarEl = document.getElementById('rev-bakalar');
+  revBaklarEl.setAttribute('data-value', Math.round(proVystavbu));
+  document.getElementById('rev-bakalar-out').textContent = fmtMil(proVystavbu) + '/rok (celkem NF)';
+  document.getElementById('bk-per-project-note').textContent =
+    `Pevná suma NF – nezávisí na počtu objektů. Při ${pocetProjektu.toFixed(1)} projektech/rok lze financovat další výstavbu.`;
+  document.getElementById('bk-props-label').textContent = '1–N objektů';
+
+  recalc();
+}
+
+function updateBakalarCalc() {
+  const obrat = +document.getElementById('bk-obrat').value;
+  const podil = +document.getElementById('bk-podil').value / 100;
+  document.getElementById('bk-obrat-out').textContent = obrat;
+  document.getElementById('bk-podil-out').textContent = Math.round(podil * 100) + ' %';
+
+  const charita = obrat * 0.95;            // 95 % DMS ze zákona
+  const proVystavbu = charita * podil;     // vybraný podíl na výstavbu
+  const pocetProjektu = proVystavbu / 14;  // průměrný projekt ~14 mil. (rekonstrukce 30 bytů)
+
+  const fmtMil = n => (Math.round(n * 10) / 10).toFixed(0) + ' mil. Kč';
+
+  document.getElementById('bk-results').innerHTML = `
+    <div style="flex:1;min-width:80px;background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:3px;">95 % DMS → charita</div>
+      <div style="font-family:'Playfair Display',serif;font-size:13px;color:#6EDBB9;font-weight:600;">${fmtMil(charita)}</div>
+    </div>
+    <div style="flex:1;min-width:80px;background:rgba(201,168,76,0.15);border-radius:6px;padding:6px 8px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:3px;">Pro výstavbu S.T.R.O.M.</div>
+      <div style="font-family:'Playfair Display',serif;font-size:13px;color:var(--gold-light);font-weight:600;">${fmtMil(proVystavbu)}</div>
+    </div>
+    <div style="flex:1;min-width:80px;background:rgba(255,255,255,0.05);border-radius:6px;padding:6px 8px;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:3px;">Počet projektů / rok</div>
+      <div style="font-family:'Playfair Display',serif;font-size:13px;color:#7BB8F5;font-weight:600;">${pocetProjektu.toFixed(1)}</div>
+    </div>
+  `;
+}
+
+function updateMixSlider() {
+  const val = +document.getElementById('fs-mix-range').value;
+  document.getElementById('fs-mix-out').textContent = val + ' %';
+  document.getElementById('fs-split-bakalar').textContent = val + ' %';
+  document.getElementById('fs-split-voucher').textContent = (100 - val) + ' %';
+}
+
+function applyScenario(s) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  set('units',         s.units);
+  set('props',         s.props || 1);
+  set('rent',          s.rent);
+  set('occupancy',     s.occupancy);
+  set('care',          s.care);
+  set('dot-state',     s.dotState);
+  set('dot-obec',      s.dotObec);
+  set('bridge-rate',   s.bridgeRate);
+  set('bridge-months', s.bridgeMonths);
+}
+
+function loadScenario(name, btn) {
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentScenarioName = name;
+  const srcMode = (currentMode === 'porovnani') ? 'novostavba' : currentMode;
+  applyScenario(scenarios[srcMode][name]);
+  recalc();
+}
+
+// CAPEX calculation – core difference between models
+function calcCapex(units, isReko) {
+  const avgM2 = 42; // m² per unit
+
+  if (isReko) {
+    const cp = conditionParams[currentCondition];
+    const build   = units * avgM2 * cp.costPerM2;
+    const common  = 2500000;  // společné prostory – menší než novostavba
+    const equip   = 2500000;
+    const proj    = 1200000;
+    const reserve = (build + common + equip + proj) * cp.reservePct;
+    return build + common + equip + proj + reserve;
+  } else {
+    const build   = units * avgM2 * 46000;  // novostavba plná cena
+    const common  = 8000000;
+    const equip   = 4000000;
+    const proj    = 2500000;
+    const reserve = (build + common + equip + proj) * 0.10;
+    return build + common + equip + proj + reserve;
+  }
+}
+
+function calcModel(p, isReko) {
+  const { units, rent, occupancy, care, dotStatePct, dotObecPct, bridgeRate, bridgeMonths } = p;
+  const totalDotPct = dotStatePct + dotObecPct;
+  const nadacePct = 1 - totalDotPct;
+
+  if (nadacePct < 0 || nadacePct > 0.6) return null;
+
+  const capex = calcCapex(units, isReko);
+
+  const dotStateAmt = capex * dotStatePct;
+  const dotObecAmt  = capex * dotObecPct;
+  const nadaceAmt   = capex * nadacePct;
+  // Bank bridges the dotace portion only (state + obec), nadace pays directly
+  const bridgeAmt   = dotStateAmt + dotObecAmt;
+
+  // Bridge cost = interest only during waiting period (one-time, not recurring)
+  const bridgeCost = bridgeAmt * (bridgeRate / 12) * bridgeMonths;
+
+  // Total project cost including bridge interest
+  const totalProjectCost = capex + bridgeCost;
+
+  // ── PROVOZNÍ OPEX (no loan repayment – bridge splacen z dotací) ──
+  // Staff scales with units
+  const staffBase  = 2160000;
+  const staffExtra = Math.max(0, Math.floor((units - 20) / 10)) * 380000;
+  const staff = staffBase + staffExtra;
+
+  const admin       = 300000;
+  const energy      = Math.round(420000 * (units / 30));
+  const food        = Math.round(720000 * (units / 30));
+  const maintenance = Math.round(480000 * (units / 30));
+
+  const opex = staff + admin + energy + food + maintenance;  // ZERO loan repayment
+
+  // ── PŘÍJMY ──
+  const active     = units * occupancy;
+  const rentRev    = active * rent * 12;
+  const careClient = active * rent * 0.33 * 12;   // 33 % nájmu jako příplatek péče
+  const careState  = active * care * 12;
+  const provDot    = 500000;                        // paušální provozní dotace
+  const revPublic  = p.revPublic  || 0;             // služby pro veřejnost
+  const revRent    = p.revRent    || 0;             // pronájem nebytových prostor
+  const revDaycare = p.revDaycare || 0;             // denní stacionář
+  const revEsg     = p.revEsg    || 0;             // ESG sponzoring + dary
+  const revEnergy  = p.revEnergy  || 0;             // FVE / přebytek energie
+  const revBakalar = p.revBakalar || 0;             // reinvestice z Bakalářů J&L
+  const totalRev   = rentRev + careClient + careState + provDot + revPublic + revRent + revDaycare + revEsg + revEnergy + revBakalar;
+
+  const surplus = totalRev - opex;
+
+  // Scale everything by number of properties
+  const pr = p.props || 1;
+  return {
+    capex:            capex * pr,
+    dotStateAmt:      dotStateAmt * pr,
+    dotObecAmt:       dotObecAmt * pr,
+    nadaceAmt:        nadaceAmt * pr,
+    nadacePct, dotStatePct, dotObecPct,
+    bridgeAmt:        bridgeAmt * pr,
+    bridgeCost:       bridgeCost * pr,
+    bridgeMonths,
+    totalProjectCost: totalProjectCost * pr,
+    staff:            staff * pr,
+    admin:            admin * pr,
+    energy:           energy * pr,
+    food:             food * pr,
+    maintenance:      maintenance * pr,
+    opex:             opex * pr,
+    rentRev:          rentRev * pr,
+    careClient:       careClient * pr,
+    careState:        careState * pr,
+    provDot:          provDot * pr,
+    revPublic:        revPublic * pr,
+    revRent:          revRent * pr,
+    revDaycare:       revDaycare * pr,
+    revEsg:           revEsg * pr,
+    revEnergy:        revEnergy * pr,
+    revBakalar:       revBakalar,  // pevná suma NF – nezávisí na počtu objektů
+    totalRev:         totalRev * pr,
+    surplus:          surplus * pr,
+    units, props: pr, occupancy, rent, isReko
+  };
+}
+
+function getParams() {
+  return {
+    units:        +document.getElementById('units').value,
+    props:        +document.getElementById('props').value,
+    rent:         +document.getElementById('rent').value,
+    occupancy:    +document.getElementById('occupancy').value / 100,
+    care:         +document.getElementById('care').value,
+    dotStatePct:  +document.getElementById('dot-state').value / 100,
+    dotObecPct:   +document.getElementById('dot-obec').value / 100,
+    bridgeRate:   +document.getElementById('bridge-rate').value / 100,
+    bridgeMonths: +document.getElementById('bridge-months').value,
+    revPublic:    +document.getElementById('rev-public').value,
+    revRent:      +document.getElementById('rev-rent').value,
+    revDaycare:   +document.getElementById('rev-daycare').value,
+    revEsg:       +document.getElementById('rev-esg').value,
+    revEnergy:    +document.getElementById('rev-energy').value,
+    revBakalar:   +(document.getElementById('rev-bakalar').getAttribute('data-value') || 0)
+  };
+}
+
+function recalc() {
+  const p = getParams();
+
+  // Update all display labels
+  document.getElementById('units-out').textContent       = p.units + ' bytů';
+  document.getElementById('props-out').textContent       = p.props + (p.props === 1 ? ' objekt' : p.props < 5 ? ' objekty' : ' objektů') + (p.props > 1 ? ' · celkem ' + (p.units * p.props) + ' bytů' : '');
+  document.getElementById('rent-out').textContent        = Math.round(p.rent).toLocaleString('cs-CZ') + ' Kč';
+  document.getElementById('occupancy-out').textContent   = Math.round(p.occupancy * 100) + ' %';
+  document.getElementById('care-out').textContent        = Math.round(p.care).toLocaleString('cs-CZ') + ' Kč';
+  document.getElementById('dot-state-out').textContent   = Math.round(p.dotStatePct * 100) + ' %';
+  document.getElementById('dot-obec-out').textContent    = Math.round(p.dotObecPct * 100) + ' %';
+  document.getElementById('bridge-rate-out').textContent = (+document.getElementById('bridge-rate').value).toFixed(1).replace('.', ',') + ' %';
+  document.getElementById('bridge-months-out').textContent = p.bridgeMonths + ' měs.';
+  const fmtRevSlider = v => v === 0 ? '0 Kč' : (Math.round(v/1000)).toLocaleString('cs-CZ') + ' tis. Kč';
+  document.getElementById('rev-public-out').textContent  = fmtRevSlider(p.revPublic);
+  document.getElementById('rev-rent-out').textContent    = fmtRevSlider(p.revRent);
+  document.getElementById('rev-daycare-out').textContent = fmtRevSlider(p.revDaycare);
+  document.getElementById('rev-esg-out').textContent     = fmtRevSlider(p.revEsg);
+  document.getElementById('rev-energy-out').textContent  = fmtRevSlider(p.revEnergy);
+  // revBakalar is set by updateBakalarRev(), just update display
+  const bkVal = +(document.getElementById('rev-bakalar').getAttribute('data-value') || 0);
+  document.getElementById('rev-bakalar-out').textContent = bkVal === 0 ? '0 Kč' : fmtRevSlider(bkVal);
+
+  // Explainer boxes
+  const nadPct = Math.max(0, Math.round((1 - p.dotStatePct - p.dotObecPct) * 100));
+  document.getElementById('exp-state').textContent  = Math.round(p.dotStatePct * 100) + ' %';
+  document.getElementById('exp-obec').textContent   = Math.round(p.dotObecPct * 100) + ' %';
+  document.getElementById('exp-nadace').textContent = nadPct + ' %';
+
+  if (currentMode === 'rekonstrukce') {
+    const lf = document.getElementById('legal-form').value;
+    document.getElementById('legal-note').textContent = legalNotes[lf];
+    document.getElementById('cond-note').textContent  = conditionParams[currentCondition].label;
+  }
+
+  const nadacePct = 1 - p.dotStatePct - p.dotObecPct;
+  const warn = document.getElementById('warning');
+  warn.style.display = (nadacePct < 0) ? 'block' : 'none';
+  if (nadacePct < 0) return;
+
+  const isReko = (currentMode === 'rekonstrukce');
+  const m = calcModel(p, isReko);
+  if (!m) return;
+
+  // Finance summary sidebar
+  document.getElementById('finance-sum').innerHTML = `
+    <div class="finance-sum-row"><span><span class="dot" style="background:#1D9E75"></span>Státní dotace</span><span>${fmtM(m.dotStateAmt)} (${Math.round(m.dotStatePct*100)} %)</span></div>
+    <div class="finance-sum-row"><span><span class="dot" style="background:var(--gold)"></span>Dotace obec / kraj</span><span>${fmtM(m.dotObecAmt)} (${Math.round(m.dotObecPct*100)} %)</span></div>
+    <div class="finance-sum-row" id="fin-sum-nadace"><span><span class="dot" id="fin-dot-nadace" style="background:var(--blue)"></span><span id="fin-label-nadace">Nadační fond</span></span><span>${fmtM(m.nadaceAmt)} (${Math.round(m.nadacePct*100)} %)</span></div>
+    ${currentFundSource === 'mix' ? `<div class="finance-sum-row" style="padding-left:13px;font-size:11px;color:var(--text-muted)"><span>↳ Vouchery (${100 - +document.getElementById('fs-mix-range').value} %)</span><span>${fmtM(m.nadaceAmt * (1 - +document.getElementById('fs-mix-range').value/100))}</span></div><div class="finance-sum-row" style="padding-left:13px;font-size:11px;color:var(--text-muted)"><span>↳ Bakaláři J&L (${+document.getElementById('fs-mix-range').value} %)</span><span>${fmtM(m.nadaceAmt * +document.getElementById('fs-mix-range').value/100)}</span></div>` : ''}
+    <div class="finance-sum-row"><span><span class="dot" style="background:var(--amber)"></span>Bridge (dočasný)</span><span>${fmtM(m.bridgeAmt)}</span></div>
+    <div class="finance-sum-row"><span>CAPEX celkem</span><span>${fmtM(m.capex)}</span></div>
+  `;
+
+  // Bridge info card stats
+  document.getElementById('bridge-stats').innerHTML = `
+    <div class="bridge-stat"><strong>${fmtM(m.bridgeAmt)}</strong>výše bridge úvěru</div>
+    <div class="bridge-stat"><strong>${fmtM(m.bridgeCost)}</strong>celkový úrok (${m.bridgeMonths} měs.)</div>
+    <div class="bridge-stat"><strong>${fmtM(m.totalProjectCost)}</strong>reálné náklady projektu</div>
+  `;
+
+  // Compare banner – always calculates BOTH models from current slider values
+  if (currentMode === 'porovnani') {
+    // Use each model's own scenario params so comparison is fair and meaningful
+    const sN = scenarios.novostavba[currentScenarioName];
+    const sR = scenarios.rekonstrukce[currentScenarioName];
+    const pN = { units: sN.units, props: p.props, rent: sN.rent, occupancy: sN.occupancy/100,
+                 care: sN.care, dotStatePct: sN.dotState/100, dotObecPct: sN.dotObec/100,
+                 bridgeRate: sN.bridgeRate/100, bridgeMonths: sN.bridgeMonths,
+                 revPublic: p.revPublic, revRent: p.revRent, revDaycare: p.revDaycare,
+                 revEsg: p.revEsg, revEnergy: p.revEnergy };
+    const pR = { units: sR.units, props: p.props, rent: sR.rent, occupancy: sR.occupancy/100,
+                 care: sR.care, dotStatePct: sR.dotState/100, dotObecPct: sR.dotObec/100,
+                 bridgeRate: sR.bridgeRate/100, bridgeMonths: sR.bridgeMonths,
+                 revPublic: p.revPublic, revRent: p.revRent, revDaycare: p.revDaycare,
+                 revEsg: p.revEsg, revEnergy: p.revEnergy };
+    const mN = calcModel(pN, false);
+    const mR = calcModel(pR, true);
+    if (mN && mR) {
+      const capexSaving = mN.capex - mR.capex;
+      const surplusDiff = mR.surplus - mN.surplus;
+      const scenLabel = currentScenarioName === 'conservative' ? 'Konzervativní' : currentScenarioName === 'base' ? 'Základní' : 'Optimistický';
+      document.getElementById('compare-banner-title').textContent = 'Porovnání modelů – ' + scenLabel + ' scénář';
+      document.getElementById('compare-grid').innerHTML = `
+        <div class="compare-col">
+          <div class="compare-col-title">Novostavba</div>
+          <div class="compare-row"><span>CAPEX</span><span>${fmtM(mN.capex)}</span></div>
+          <div class="compare-row"><span>Nadační podíl</span><span>${fmtM(mN.nadaceAmt)}</span></div>
+          <div class="compare-row"><span>Bridge úrok (1×)</span><span>${fmtM(mN.bridgeCost)}</span></div>
+          <div class="compare-row"><span>Roční OPEX</span><span>${fmtM(mN.opex)}</span></div>
+          <div class="compare-row"><span>Roční příjmy</span><span>${fmtM(mN.totalRev)}</span></div>
+          <div class="compare-row highlight"><span>Přebytek / rok</span><span>${fmtM(mN.surplus)}</span></div>
+        </div>
+        <div class="compare-divider"></div>
+        <div class="compare-col">
+          <div class="compare-col-title">Rekonstrukce (${currentCondition === 'dobry' ? 'dobrý' : currentCondition === 'prumerny' ? 'průměrný' : 'špatný'} stav)</div>
+          <div class="compare-row"><span>CAPEX</span><span>${fmtM(mR.capex)} <span style="color:#6EDBB9;font-size:10px">↓ ${fmtM(capexSaving)}</span></span></div>
+          <div class="compare-row"><span>Nadační podíl</span><span>${fmtM(mR.nadaceAmt)}</span></div>
+          <div class="compare-row"><span>Bridge úrok (1×)</span><span>${fmtM(mR.bridgeCost)}</span></div>
+          <div class="compare-row"><span>Roční OPEX</span><span>${fmtM(mR.opex)}</span></div>
+          <div class="compare-row"><span>Roční příjmy</span><span>${fmtM(mR.totalRev)}</span></div>
+          <div class="compare-row highlight"><span>Přebytek / rok</span><span>${fmtM(mR.surplus)} <span style="color:#6EDBB9;font-size:10px">↑ ${fmtM(surplusDiff)}</span></span></div>
+        </div>
+      `;
+    }
+  }
+
+  renderResults(m, p);
+}
+
+function renderResults(m, p) {
+  const isReko = m.isReko;
+
+  // Saving vs novostavba for reko mode
+  const savingHtml = isReko ? (() => {
+    const pr = m.props || 1;
+    const capexNovo = calcCapex(p.units, false) * pr;
+    const saving = capexNovo - m.capex;
+    return `<div class="metric-saving">↓ ${fmtM(saving)} vs. novostavba${pr > 1 ? ' (celkem)' : ''}</div>`;
+  })() : '';
+
+  document.getElementById('metrics-grid').innerHTML = `
+    <div class="metric-card accent">
+      <div class="metric-label">CAPEX projektu</div>
+      <div class="metric-val">${fmtM(m.capex)}</div>
+      <div class="metric-sub">${isReko ? 'rekonstrukce' : 'novostavba'} · ${m.props > 1 ? m.props + ' objekty × ' : ''}${m.units} bytů${m.props > 1 ? ' = ' + (m.units*m.props) + ' bytů celkem' : ''}</div>
+      ${savingHtml}
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Roční provozní příjmy</div>
+      <div class="metric-val pos">${fmtM(m.totalRev)}</div>
+      <div class="metric-sub">při ${Math.round(m.occupancy * 100)} % obsazenosti · ${m.units} bytů</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Roční provozní náklady</div>
+      <div class="metric-val">${fmtM(m.opex)}</div>
+      <div class="metric-sub">splátka úvěru = 0 Kč (bridge splacen z dotací)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Provozní přebytek / rok</div>
+      <div class="metric-val ${m.surplus >= 0 ? 'pos' : 'neg'}">${fmtM(m.surplus)}</div>
+      <div class="metric-sub">${m.surplus >= 0 ? 'čistý roční cash flow' : '⚠ projekt je provozně ztrátový'}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Bridge úrok (jednorázový)</div>
+      <div class="metric-val">${fmtM(m.bridgeCost)}</div>
+      <div class="metric-sub">${m.bridgeMonths} měs. čekání · zahrnut v celkových nákladech</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Nadační podíl 15 % – zdroj</div>
+      <div class="metric-val ${m.nadacePct <= 0.15 ? 'pos' : 'neg'}">${fmtM(m.nadaceAmt)}</div>
+      <div class="metric-sub">${fundSourceConfig[currentFundSource].label} · ${Math.round(m.nadacePct * 100)} % z CAPEX</div>
+    </div>
+  `;
+
+  document.getElementById('fin-grid').innerHTML = `
+    <div class="fin-col">
+      <div class="fin-col-title"><span class="dot-lg dot" style="background:#1D9E75"></span>Roční příjmy</div>
+      <div class="fin-row"><span>Nájem + služby</span><span>${fmtM(m.rentRev)}</span></div>
+      <div class="fin-row"><span>Úhrada za péči (klienti)</span><span>${fmtM(m.careClient)}</span></div>
+      <div class="fin-row"><span>Příspěvek na péči (stát)</span><span>${fmtM(m.careState)}</span></div>
+      <div class="fin-row"><span>Provozní dotace</span><span>${fmtM(m.provDot)}</span></div>
+      ${m.revPublic > 0 ? `<div class="fin-row"><span>Služby pro veřejnost</span><span>${fmtM(m.revPublic)}</span></div>` : ''}
+      ${m.revRent > 0 ? `<div class="fin-row"><span>Pronájem nebytových prostor</span><span>${fmtM(m.revRent)}</span></div>` : ''}
+      ${m.revDaycare > 0 ? `<div class="fin-row"><span>Denní stacionář / respitní péče</span><span>${fmtM(m.revDaycare)}</span></div>` : ''}
+      ${m.revEsg > 0 ? `<div class="fin-row"><span>ESG sponzoring + dary</span><span>${fmtM(m.revEsg)}</span></div>` : ''}
+      ${m.revEnergy > 0 ? `<div class="fin-row"><span>Příjmy z energetiky (FVE)</span><span>${fmtM(m.revEnergy)}</span></div>` : ''}
+      ${m.revBakalar > 0 ? `<div class="fin-row" style="color:#8B6914;font-weight:500"><span>↻ Reinvestice z Bakalářů J&L <span style="font-weight:400;font-size:10px">(pevná suma NF)</span></span><span>${fmtM(m.revBakalar)}</span></div>` : ''}
+      <div class="fin-row"><span>Celkem příjmy</span><span>${fmtM(m.totalRev)}</span></div>
+    </div>
+    <div class="fin-col">
+      <div class="fin-col-title"><span class="dot-lg dot" style="background:#D85A30"></span>Roční náklady (provoz)</div>
+      <div class="fin-row"><span>Personál péče</span><span>${fmtM(m.staff)}</span></div>
+      <div class="fin-row"><span>Energie</span><span>${fmtM(m.energy)}</span></div>
+      <div class="fin-row"><span>Strava</span><span>${fmtM(m.food)}</span></div>
+      <div class="fin-row"><span>Správa + údržba</span><span>${fmtM(m.maintenance)}</span></div>
+      <div class="fin-row"><span>Administrativa + pojištění</span><span>${fmtM(m.admin)}</span></div>
+      <div class="fin-row highlight"><span>Splátka úvěru</span><span>0 Kč ✓</span></div>
+      <div class="fin-row"><span>Celkem náklady</span><span>${fmtM(m.opex)}</span></div>
+    </div>
+  `;
+
+  // Chart – 10-year cumulative CF
+  const labels = Array.from({ length: 10 }, (_, i) => 'Rok ' + (i + 1));
+  let cum = 0;
+  // Year 1 ramp: 60% (rozjezd), Year 2: 85%, Year 3+: 100%
+  const cumMain = labels.map((_, i) => {
+    const ramp = i === 0 ? 0.60 : i === 1 ? 0.85 : 1.0;
+    cum += m.surplus * ramp;
+    return Math.round(cum / 100000) / 10;
+  });
+
+  const lineColor = m.surplus >= 0 ? '#1D9E75' : '#D85A30';
+  const fillColor = m.surplus >= 0 ? 'rgba(29,158,117,0.10)' : 'rgba(216,90,48,0.10)';
+
+  let datasets = [{
+    label: isReko ? 'Rekonstrukce' : 'Novostavba',
+    data: cumMain,
+    borderColor: lineColor,
+    backgroundColor: fillColor,
+    fill: true, tension: 0.4,
+    pointRadius: 4, pointBackgroundColor: '#fff',
+    pointBorderColor: lineColor, pointBorderWidth: 2, borderWidth: 2.5,
+    borderDash: []
+  }];
+
+  // In porovnani mode show BOTH lines calculated from same params
+  if (currentMode === 'porovnani') {
+    const sN2 = scenarios.novostavba[currentScenarioName];
+    const sR2 = scenarios.rekonstrukce[currentScenarioName];
+    const pN2 = { units: sN2.units, props: p.props, rent: sN2.rent, occupancy: sN2.occupancy/100,
+                  care: sN2.care, dotStatePct: sN2.dotState/100, dotObecPct: sN2.dotObec/100,
+                  bridgeRate: sN2.bridgeRate/100, bridgeMonths: sN2.bridgeMonths,
+                  revPublic: p.revPublic, revRent: p.revRent, revDaycare: p.revDaycare,
+                 revEsg: p.revEsg, revEnergy: p.revEnergy };
+    const pR2 = { units: sR2.units, props: p.props, rent: sR2.rent, occupancy: sR2.occupancy/100,
+                  care: sR2.care, dotStatePct: sR2.dotState/100, dotObecPct: sR2.dotObec/100,
+                  bridgeRate: sR2.bridgeRate/100, bridgeMonths: sR2.bridgeMonths,
+                  revPublic: p.revPublic, revRent: p.revRent, revDaycare: p.revDaycare,
+                 revEsg: p.revEsg, revEnergy: p.revEnergy };
+    const mN = calcModel(pN2, false);
+    const mR = calcModel(pR2, true);
+    if (mN && mR) {
+      let cumN = 0, cumR = 0;
+      const dN = labels.map((_, i) => { cumN += mN.surplus * (i===0?0.60:i===1?0.85:1.0); return Math.round(cumN/100000)/10; });
+      const dR = labels.map((_, i) => { cumR += mR.surplus * (i===0?0.60:i===1?0.85:1.0); return Math.round(cumR/100000)/10; });
+      datasets = [
+        { label:'Novostavba', data:dN, borderColor:'#C9A84C', backgroundColor:'rgba(201,168,76,0.07)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#C9A84C', pointBorderWidth:2, borderWidth:2, borderDash:[5,3] },
+        { label:'Rekonstrukce', data:dR, borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,0.10)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#1D9E75', pointBorderWidth:2, borderWidth:2.5, borderDash:[] }
+      ];
+    }
+  }
+
+  document.getElementById('chart-legend').innerHTML = datasets.map(d =>
+    `<span class="legend-item"><span class="legend-dot" style="background:${d.borderColor}"></span>${d.label}</span>`).join('');
+
+  if (cfChart) cfChart.destroy();
+  cfChart = new Chart(document.getElementById('cfChart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1).replace('.', ',') + ' mil. Kč' } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#9CA3AF', font: { size: 11, family: 'DM Sans' } } },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#9CA3AF', font: { size: 11, family: 'DM Sans' }, callback: v => v.toFixed(0) + ' M' } }
+      }
+    }
+  });
+
+  // Tags
+  const lf = document.getElementById('legal-form') ? document.getElementById('legal-form').value : null;
+  const tags = [];
+
+  if (m.surplus > 0) tags.push(['green', '✓', `Provozní přebytek ${fmtM(m.surplus)} / rok`]);
+  else tags.push(['red', '✗', 'Projekt je provozně ztrátový']);
+
+  tags.push(['green', '✓', 'Splátka úvěru 0 Kč – bridge splacen z dotací']);
+
+  if (m.nadacePct <= 0.15) tags.push(['green', '✓', `${fundSourceConfig[currentFundSource].label}: ${Math.round(m.nadacePct*100)} % ≤ 15 % ✓`]);
+  else tags.push(['amber', '!', `Nadační podíl ${Math.round(m.nadacePct*100)} % – nad cílem 15 %`]);
+
+  const totalDotPct = m.dotStatePct + m.dotObecPct;
+  if (totalDotPct >= 0.80) tags.push(['green', '✓', `Celkové dotace ${Math.round(totalDotPct*100)} % CAPEX ✓`]);
+  else tags.push(['amber', '!', `Celkové dotace ${Math.round(totalDotPct*100)} % – pod cílem 85 %`]);
+
+  if (m.occupancy >= 0.85) tags.push(['green', '✓', `Obsazenost ${Math.round(m.occupancy*100)} % – zdravá`]);
+  else tags.push(['amber', '!', `Obsazenost ${Math.round(m.occupancy*100)} % – pozor na provoz v 1. roce`]);
+
+  if (m.bridgeMonths <= 18) tags.push(['green', '✓', `Bridge ${m.bridgeMonths} měs. – úrokový náklad nízký`]);
+  else tags.push(['amber', '!', `Bridge ${m.bridgeMonths} měs. – sledovat úrokový náklad`]);
+
+  if (m.revBakalar > 0) {
+    const projCount = Math.floor(m.revBakalar / 14000000);
+    if (projCount >= 1) tags.push(['green', '↻', `Reinvestice Bakalářů: ~${projCount} nové projekty/rok`]);
+    else tags.push(['blue', '↻', `Reinvestice Bakalářů: ${fmtM(m.revBakalar)}/rok do portfolia`]);
+  }
+  if (isReko) {
+    if (currentCondition === 'spatny') tags.push(['amber', '!', 'Špatný stav objektu – nutný STD průzkum před zahájením']);
+    else tags.push(['blue', '✓', 'Obecní nemovitost – úspora vs. novostavba v CAPEX']);
+    if (lf === 'vypujcka') tags.push(['red', '✗', 'Výpůjčka – problematická pro bridge banku']);
+    else if (lf === 'pronajem' || lf === 'prodej') tags.push(['blue', '✓', 'Právní forma vhodná pro zajištění bridge úvěru']);
+    else if (lf === 'sprava') tags.push(['amber', '!', 'Svěření do správy – omezuje komerční prvky']);
+  }
+
+  document.getElementById('tags-wrap').innerHTML = tags.map(([cls, icon, label]) =>
+    `<span class="tag ${cls}">${icon} ${label}</span>`).join('');
+}
+
+// Init
+setCondition('prumerny');
+setFundSource('voucher');
+updateBakalarRev();
+updateBakalarCalc();
+recalc();
+</script>
+</body>
+</html>
