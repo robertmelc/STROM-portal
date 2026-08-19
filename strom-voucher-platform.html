@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S.T.R.O.M. – Platforma Participativních Voucherů</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#1A2540;--navy-mid:#243058;--navy-light:#2E3D6E;
+  --gold:#C9A84C;--gold-light:#E8D5A0;--gold-dark:#8B6914;
+  --cream:#F8F4ED;--cream-dark:#EDE8DF;
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-dark:#0F6E56;
+  --amber:#BA7517;--amber-bg:#FAEEDA;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --text:#1A2540;--muted:#6B7280;--border:rgba(201,168,76,0.22);
+  --radius:12px;--shadow:0 4px 24px rgba(26,37,64,0.09);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);font-size:14px;line-height:1.6;}
+
+/* HEADER */
+.header{background:var(--navy);padding:1.75rem 2.5rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;border:40px solid rgba(201,168,76,0.07);}
+.logo-tree{width:50px;height:50px;flex-shrink:0;}
+.header-text h1{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#fff;}
+.header-text h1 span{color:var(--gold);}
+.header-text p{font-size:11px;color:rgba(255,255,255,0.48);margin-top:3px;letter-spacing:0.05em;text-transform:uppercase;}
+.header-badge{margin-left:auto;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold-light);font-size:11px;padding:5px 13px;border-radius:20px;z-index:1;white-space:nowrap;}
+
+/* TAB BAR */
+.tab-bar{background:var(--navy-mid);padding:0 2.5rem;display:flex;align-items:center;border-bottom:1px solid rgba(201,168,76,0.12);}
+.tab-btn{padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.42);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;letter-spacing:0.03em;}
+.tab-btn:hover{color:rgba(255,255,255,0.72);}
+.tab-btn.active{color:var(--gold-light);border-bottom-color:var(--gold);}
+
+/* MAIN */
+.main{max-width:1080px;margin:0 auto;padding:1.75rem 1.5rem 3rem;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* SECTION TITLE */
+.section-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:6px;}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:1.5rem;letter-spacing:0.03em;}
+.gold-line{height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:1.5rem;}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:1.25rem;}
+
+/* CARD */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);padding:12px 16px;display:flex;align-items:center;gap:7px;}
+.card-header svg{color:var(--gold);flex-shrink:0;}
+.card-header span{font-family:'Playfair Display',serif;font-size:13px;color:#fff;}
+.card-body{padding:16px;}
+
+/* SLIDER */
+.slider-row{display:flex;flex-direction:column;margin-bottom:10px;}
+.slider-top{display:flex;justify-content:space-between;align-items:center;}
+.slider-label{font-size:12px;color:var(--muted);}
+.slider-val{font-size:12px;font-weight:500;color:var(--navy);padding-left:8px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--cream-dark);border-radius:2px;outline:none;margin-top:5px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--navy);border:2px solid var(--gold);cursor:pointer;}
+
+/* GROUP LABEL */
+.group-label{font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold-dark);margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
+.group-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* METRICS */
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem;}
+.metric{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;box-shadow:var(--shadow);}
+.metric.accent{background:var(--navy);border-color:var(--navy);}
+.metric-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:5px;}
+.metric.accent .metric-label{color:rgba(255,255,255,0.45);}
+.metric-val{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;color:var(--navy);line-height:1.1;}
+.metric.accent .metric-val{color:var(--gold-light);}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.metric.accent .metric-sub{color:rgba(255,255,255,0.38);}
+.pos{color:var(--green)!important;}
+.neg{color:var(--red)!important;}
+.saving{font-size:10px;color:var(--green-dark);font-weight:500;margin-top:3px;}
+
+/* FIN TABLE */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem;}
+.fin-col{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow);}
+.fin-col-title{font-size:11px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.fin-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--muted);}
+.fin-row:last-child{border-bottom:none;border-top:1px solid var(--border);margin-top:4px;padding-top:8px;font-weight:500;font-size:13px;color:var(--text);}
+.fin-row span:last-child{font-weight:500;color:var(--text);}
+.fin-row.gold{background:rgba(201,168,76,0.06);border-radius:4px;padding:5px 6px;margin:2px -6px;}
+.fin-row.gold span{color:var(--gold-dark);font-weight:500;}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:1rem;}
+.tag{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:500;}
+.tag.green{background:var(--green-bg);color:var(--green-dark);}
+.tag.amber{background:var(--amber-bg);color:var(--amber);}
+.tag.red{background:var(--red-bg);color:var(--red);}
+.tag.blue{background:var(--blue-bg);color:var(--blue);}
+
+/* CHART */
+.chart-panel{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:1.25rem;}
+.chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.chart-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--navy);}
+.chart-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.chart-legend{display:flex;gap:12px;font-size:11px;color:var(--muted);}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+.chart-wrap{position:relative;height:220px;}
+
+/* FOND TABLE */
+.fond-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:1.25rem;}
+.fond-table th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:500;letter-spacing:0.04em;}
+.fond-table th:first-child{border-radius:8px 0 0 0;}
+.fond-table th:last-child{border-radius:0 8px 0 0;}
+.fond-table td{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,0.05);vertical-align:top;color:var(--muted);}
+.fond-table tr:last-child td{border-bottom:none;}
+.fond-table tr:nth-child(even) td{background:rgba(248,244,237,0.6);}
+.fond-table .highlight-row td{background:rgba(201,168,76,0.08);color:var(--navy);font-weight:500;}
+.fond-table .cat{font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;background:var(--cream-dark)!important;}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;}
+.badge.g{background:var(--green-bg);color:var(--green-dark);}
+.badge.a{background:var(--amber-bg);color:var(--amber);}
+.badge.r{background:var(--red-bg);color:var(--red);}
+.badge.b{background:var(--blue-bg);color:var(--blue);}
+
+/* VOUCHER COMPARISON */
+.voucher-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+.voucher-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.voucher-card-head{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.voucher-card-head .type{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:4px;}
+.voucher-card-head .name{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy);}
+.voucher-card-head .desc{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.voucher-card-body{padding:14px 18px;}
+.vr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:12px;}
+.vr:last-child{border-bottom:none;}
+.vr-key{color:var(--muted);}
+.vr-val{font-weight:500;color:var(--navy);}
+
+/* INFO BOX */
+.info-box{border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;font-size:12px;line-height:1.6;}
+.info-box.gold{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);color:var(--gold-dark);}
+.info-box.blue{background:var(--blue-bg);border:1px solid rgba(24,95,165,0.2);color:var(--blue);}
+.info-box.amber{background:var(--amber-bg);border:1px solid rgba(186,117,23,0.2);color:var(--amber);}
+.info-box strong{font-weight:600;}
+
+/* INVESTOR CALC */
+.inv-result{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.inv-res-item{background:var(--navy);border-radius:8px;padding:10px 12px;}
+.inv-res-label{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;}
+.inv-res-val{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold-light);font-weight:600;}
+.inv-res-sub{font-size:9px;color:rgba(255,255,255,0.35);margin-top:2px;}
+
+/* FINANCE SUM */
+.fin-sum{background:var(--cream);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;}
+.fin-sum-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.fin-sum-row:last-child{margin-bottom:0;border-top:1px solid var(--border);padding-top:6px;margin-top:4px;font-weight:500;}
+.dot-sm{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;flex-shrink:0;}
+
+/* FOOTER */
+.footer{text-align:center;padding:1rem 1.5rem 2rem;font-size:11px;color:var(--muted);}
+.footer strong{color:var(--gold-dark);}
+
+@media(max-width:780px){
+  .grid-2,.grid-3,.fin-grid,.voucher-grid,.metric-grid{grid-template-columns:1fr;}
+  .inv-result{grid-template-columns:1fr 1fr;}
+  .header{padding:1.25rem;gap:1rem;}
+  .tab-bar{padding:0 1rem;}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <svg class="logo-tree" viewBox="0 0 56 56" fill="none">
+    <circle cx="28" cy="28" r="28" fill="rgba(201,168,76,0.12)"/>
+    <path d="M28 8C20 14 14 20 18 26C14 24 10 28 14 32C10 30 8 36 14 38C18 40 22 38 24 36L24 48L32 48L32 36C34 38 38 40 42 38C48 36 46 30 42 32C46 28 42 24 38 26C42 20 36 14 28 8Z" fill="#C9A84C" opacity="0.9"/>
+  </svg>
+  <div class="header-text">
+    <h1><span>S.T.R.O.M.</span> – Platforma participativních voucherů</h1>
+    <p>Golden Blot cz. Nadační fond &nbsp;·&nbsp; Realitní investice bez NFT, v souladu s MiCA</p>
+  </div>
+  <div class="header-badge">Verze 1.0 · 2026</div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="setTab('voucher')">Voucherový model</button>
+  <button class="tab-btn" onclick="setTab('investor')">Kalkulačka investora</button>
+  <button class="tab-btn" onclick="setTab('projekt')">Kalkulačka projektu</button>
+  <button class="tab-btn" onclick="setTab('fondy')">Srovnání fondů</button>
+</div>
+
+<main class="main">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TAB 1: VOUCHEROVÝ MODEL -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-voucher">
+  <div class="section-title">Voucherový model vs. NFT – proč a jak</div>
+  <div class="section-sub">Stejná ekonomická logika jako původní NFT realitní model · Plný soulad s MiCA · Bez potřeby VASP licence do doby zavedení</div>
+  <div class="gold-line"></div>
+
+  <div class="info-box gold" style="margin-bottom:1.25rem;">
+    <strong>Proč ne NFT?</strong> Od 1. 1. 2024 vyžaduje realitní tokenizace formou NFT v EU licenci VASP dle MiCA nařízení (náklad 1–1,5 mil. Kč + průběžný compliance). Voucherový model dosahuje <strong>identického ekonomického výsledku</strong> pro investora i projekt, ale je právně ukotvený jako participativní dluhopis nebo tiché společenství dle NOZ – bez MiCA povinností.
+  </div>
+
+  <div class="voucher-grid">
+    <div class="voucher-card">
+      <div class="voucher-card-head">
+        <div class="type">Model A · Pro S.T.R.O.M. projekty</div>
+        <div class="name">Investiční participativní voucher</div>
+        <div class="desc">Investor vloží prostředky do konkrétního seniorského domu. Dostává podíl z čistého nájmu a podíl na zhodnocení nemovitosti. Voucher = digitální participativní list.</div>
+      </div>
+      <div class="voucher-card-body">
+        <div class="vr"><span class="vr-key">Kdo platí</span><span class="vr-val">Komunitní investor (od 10 000 Kč)</span></div>
+        <div class="vr"><span class="vr-key">Motivace</span><span class="vr-val">Výnos 2–4 % p.a. + zhodnocení nemovitosti</span></div>
+        <div class="vr"><span class="vr-key">Právní forma</span><span class="vr-val">Participativní dluhopis / tiché společenství (NOZ)</span></div>
+        <div class="vr"><span class="vr-key">Tok peněz</span><span class="vr-val">Investor → NF → CAPEX (15 % equity)</span></div>
+        <div class="vr"><span class="vr-key">Výstup</span><span class="vr-val">Čtvrtletní výnos + exit po X letech</span></div>
+        <div class="vr"><span class="vr-key">MiCA</span><span class="vr-val"><span class="badge g">Není potřeba</span></span></div>
+        <div class="vr"><span class="vr-key">Transparentnost</span><span class="vr-val">Digitální dashboard (Mooncher)</span></div>
+      </div>
+    </div>
+
+    <div class="voucher-card">
+      <div class="voucher-card-head">
+        <div class="type">Model B · Pro Bakaláře J&L</div>
+        <div class="name">Charitativní slosovací voucher</div>
+        <div class="desc">Hráč odešle DMS/SMS (30 Kč). 95 % jde na charitu – Golden Blot → reinvestice do výstavby S.T.R.O.M. Hráč dostane šanci na věcnou výhru. Žádný finanční výnos.</div>
+      </div>
+      <div class="voucher-card-body">
+        <div class="vr"><span class="vr-key">Kdo platí</span><span class="vr-val">Hráč soutěže (DMS 30 Kč)</span></div>
+        <div class="vr"><span class="vr-key">Motivace</span><span class="vr-val">Výhra (auto, dovolená) + dobrý skutek</span></div>
+        <div class="vr"><span class="vr-key">Právní forma</span><span class="vr-val">Spotřebitelská soutěž (bez loterijní licence)</span></div>
+        <div class="vr"><span class="vr-key">Tok peněz</span><span class="vr-val">Hráč → 95 % → Golden Blot → výstavba</span></div>
+        <div class="vr"><span class="vr-key">Výstup</span><span class="vr-val">Věcná cena (slosování), žádný finanční výnos</span></div>
+        <div class="vr"><span class="vr-key">MiCA</span><span class="vr-val"><span class="badge g">Netýká se</span></span></div>
+        <div class="vr"><span class="vr-key">Transparentnost</span><span class="vr-val">Veřejné výsledky slosování</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NFT vs VOUCHER SROVNÁNÍ -->
+  <div class="section-title" style="font-size:17px;margin-bottom:6px;">NFT (dříve) vs. Voucher (nyní) – co se zachovalo</div>
+  <div class="gold-line"></div>
+
+  <table class="fond-table">
+    <thead>
+      <tr>
+        <th style="width:28%">Vlastnost</th>
+        <th style="width:24%">NFT model (2022–2023)</th>
+        <th style="width:24%">Voucher model (2024+)</th>
+        <th style="width:24%">Rozdíl</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="cat" colspan="4">Ekonomika pro investora</td></tr>
+      <tr><td>Výnos z nájmu</td><td><span class="badge g">✓ Ano</span> (7–8 % p.a.)</td><td><span class="badge g">✓ Ano</span> (2–4 % p.a.)</td><td>Nižší díky dotaci (méně dluhové zátěže)</td></tr>
+      <tr><td>Podíl na zhodnocení</td><td><span class="badge g">✓ Ano</span></td><td><span class="badge g">✓ Ano</span></td><td>Stejné</td></tr>
+      <tr><td>Exit / likvidita</td><td>Sekundární trh NFT</td><td>Převod podílu / výkup NF</td><td>Bez závislosti na crypto burze</td></tr>
+      <tr><td>Minimální vstup</td><td>Variabilní (ETH)</td><td>Od 10 000 Kč</td><td>Přístupnější pro běžné investory</td></tr>
+      <tr><td>Krytí investice</td><td>NFT token</td><td>Reálná nemovitost (zástavní právo 2. pořadí)</td><td>Vyšší právní jistota</td></tr>
+      <tr><td class="cat" colspan="4">Regulace a náklady</td></tr>
+      <tr><td>MiCA compliance</td><td><span class="badge r">Vyžaduje VASP</span> (od 2024)</td><td><span class="badge g">Nevyžaduje</span></td><td>Úspora 1–1,5 mil. Kč setup + průběžný SLA</td></tr>
+      <tr><td>Daňový režim investora</td><td>Při výběru do fiat</td><td>Po 3 letech osvobozeno (tiché spol.)</td><td>Výhodnější pro dlouhodobého investora</td></tr>
+      <tr><td>Platba</td><td>ETH (nutná krypto peněženka)</td><td>CZK (bankovní převod / platební brána)</td><td>Masovější dosah</td></tr>
+      <tr><td>Technologická platforma</td><td>Blockchain (Ethereum)</td><td>Mooncher (SaaS voucher wallet)</td><td>Nižší provozní náklady, jednodušší UX</td></tr>
+      <tr class="highlight-row"><td>Celkový náklad setup</td><td>250 000 – 1 250 000 Kč + VASP</td><td>Mooncher SaaS (SLA model)</td><td>Výrazně nižší vstupní bariéra</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TAB 2: KALKULAČKA INVESTORA -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-investor">
+  <div class="section-title">Kalkulačka investora</div>
+  <div class="section-sub">Kolik vložím · na jak dlouho · jaký dostanu výnos · kdy se mi to vrátí</div>
+  <div class="gold-line"></div>
+
+  <div class="grid-2" style="align-items:start;">
+    <div class="card">
+      <div class="card-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <span>Parametry investice</span>
+      </div>
+      <div class="card-body">
+        <div class="group-label">Investice</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Výše vkladu</span><span class="slider-val" id="inv-amount-out">100 000 Kč</span></div>
+          <input type="range" id="inv-amount" min="10000" max="2000000" step="10000" value="100000" oninput="calcInvestor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Délka investice (roky)</span><span class="slider-val" id="inv-years-out">5 let</span></div>
+          <input type="range" id="inv-years" min="1" max="20" step="1" value="5" oninput="calcInvestor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Roční výnos z nájmu (% p.a.)</span><span class="slider-val" id="inv-yield-out">3,0 %</span></div>
+          <input type="range" id="inv-yield" min="1" max="8" step="0.1" value="3" oninput="calcInvestor()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Roční zhodnocení nemovitosti</span><span class="slider-val" id="inv-appre-out">3,0 %</span></div>
+          <input type="range" id="inv-appre" min="0" max="8" step="0.5" value="3" oninput="calcInvestor()">
+        </div>
+        <div class="group-label">Výstup</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Způsob výstupu</span><span class="slider-val" id="inv-exit-out">Převod podílu</span></div>
+          <input type="range" id="inv-exit" min="0" max="1" step="1" value="0" oninput="calcInvestor()">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="inv-result" id="inv-result" style="margin-bottom:1.25rem;"></div>
+      <div class="chart-panel">
+        <div class="chart-header">
+          <div><div class="chart-title">Kumulativní výnos investice</div><div class="chart-sub">Roční přírůstek (nájem + zhodnocení)</div></div>
+          <div class="chart-legend" id="inv-legend"></div>
+        </div>
+        <div class="chart-wrap"><canvas id="invChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box blue">
+    <strong>Daňový bonus:</strong> Při investici formou tichého společenství nebo participativního dluhopisu je výnos po 3 letech od prodeje/výstupu osvobozen od daně z příjmu. Průběžné dividendy z nájmu podléhají srážkové dani 15 %. Doporučujeme konzultovat s daňovým poradcem.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TAB 3: KALKULAČKA PROJEKTU (zkrácená verze S.T.R.O.M. v3) -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-projekt">
+  <div class="section-title">Kalkulačka projektu</div>
+  <div class="section-sub">Modelování financování konkrétního objektu · Novostavba nebo rekonstrukce obecní budovy</div>
+  <div class="gold-line"></div>
+
+  <div class="grid-2" style="align-items:start;">
+    <div class="card">
+      <div class="card-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>Parametry projektu</span>
+      </div>
+      <div class="card-body">
+
+        <!-- MODE -->
+        <div class="group-label">Typ výstavby</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <button class="tab-btn active" id="mode-novo" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:7px;font-size:11px;background:#fff;color:var(--navy);" onclick="setProjMode('novo')">Novostavba</button>
+          <button class="tab-btn" id="mode-reko" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:7px;font-size:11px;background:transparent;color:var(--muted);" onclick="setProjMode('reko')">Rekonstrukce obecní budovy</button>
+        </div>
+
+        <div class="group-label">Projekt</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Počet bytových jednotek</span><span class="slider-val" id="p-units-out">30 bytů</span></div>
+          <input type="range" id="p-units" min="5" max="80" step="1" value="30" oninput="calcProj()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Průměrný nájem + služby</span><span class="slider-val" id="p-rent-out">12 000 Kč</span></div>
+          <input type="range" id="p-rent" min="6000" max="20000" step="500" value="12000" oninput="calcProj()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Obsazenost</span><span class="slider-val" id="p-occ-out">90 %</span></div>
+          <input type="range" id="p-occ" min="50" max="100" step="1" value="90" oninput="calcProj()">
+        </div>
+
+        <div class="group-label">Financování</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Státní dotace (% CAPEX)</span><span class="slider-val" id="p-dot-out">60 %</span></div>
+          <input type="range" id="p-dot" min="20" max="75" step="1" value="60" oninput="calcProj()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Dotace obec/kraj (% CAPEX)</span><span class="slider-val" id="p-obec-out">25 %</span></div>
+          <input type="range" id="p-obec" min="0" max="40" step="1" value="25" oninput="calcProj()">
+        </div>
+
+        <div class="group-label">Komunitní investoři (zbylých 15 %)</div>
+        <div style="background:var(--cream);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);">
+          Zbylých <strong id="p-nadace-pct" style="color:var(--navy)">15 %</strong> tvoří nadační podíl – financován participativními vouchery nebo reinvesticí z Bakalářů J&L.
+          Banka funguje pouze jako bridge (předfinancování dotací).
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="metric-grid" id="p-metrics"></div>
+      <div class="fin-grid" id="p-fintable"></div>
+      <div class="tags" id="p-tags"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TAB 4: SROVNÁNÍ FONDŮ -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-fondy">
+  <div class="section-title">Srovnání investičních struktur</div>
+  <div class="section-sub">ZISIF 15 · ZISIF 272 · ETF/OPF · Realitní crypto fond · Voucherový model S.T.R.O.M.</div>
+  <div class="gold-line"></div>
+
+  <div class="info-box amber" style="margin-bottom:1.25rem;">
+    <strong>Kontext pro Golden Blot:</strong> Realizace projektu S.T.R.O.M. nevyžaduje zakládání fondu. Voucherový model funguje přímo pod Golden Blot NF (participativní dluhopisy / tiché společenství). Přehled fondových struktur slouží pro srovnání a pro případné budoucí škálování projektu.
+  </div>
+
+  <table class="fond-table">
+    <thead>
+      <tr>
+        <th style="width:20%">Kritérium</th>
+        <th>ZISIF §15<br><small style="font-weight:400;opacity:0.7">Uzavřený fond</small></th>
+        <th>ZISIF §272<br><small style="font-weight:400;opacity:0.7">Kvalif. investoři</small></th>
+        <th>ETF / OPF<br><small style="font-weight:400;opacity:0.7">Veřejný fond</small></th>
+        <th>Crypto fond<br><small style="font-weight:400;opacity:0.7">Realitní tokeny</small></th>
+        <th style="background:rgba(201,168,76,0.2);">Voucher S.T.R.O.M.<br><small style="font-weight:400;opacity:0.8">Golden Blot NF</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="cat" colspan="6">Přístup investorů</td></tr>
+      <tr>
+        <td>Typ investora</td>
+        <td>Max. 20 osob + KI</td>
+        <td>Pouze kvalifikovaní (3 mil. Kč+)</td>
+        <td>Veřejnost (od 500 Kč)</td>
+        <td>Veřejnost</td>
+        <td style="background:rgba(201,168,76,0.07);"><strong>Veřejnost (od 10 000 Kč)</strong></td>
+      </tr>
+      <tr>
+        <td>Min. investice</td>
+        <td>Není limit</td>
+        <td>1 000 000 Kč</td>
+        <td>500 Kč</td>
+        <td>Variabilní (crypto)</td>
+        <td style="background:rgba(201,168,76,0.07);"><strong>10 000 Kč</strong></td>
+      </tr>
+      <tr><td class="cat" colspan="6">Regulace a compliance</td></tr>
+      <tr>
+        <td>Schválení ČNB</td>
+        <td><span class="badge a">12 měsíců</span></td>
+        <td><span class="badge a">12 měsíců</span></td>
+        <td><span class="badge r">Unlimited</span></td>
+        <td><span class="badge b">VASP (MiCA)</span></td>
+        <td style="background:rgba(201,168,76,0.07);"><span class="badge g">Nevyžaduje</span></td>
+      </tr>
+      <tr>
+        <td>Veřejná nabídka</td>
+        <td><span class="badge r">Není možná</span></td>
+        <td><span class="badge a">Pouze KI</span></td>
+        <td><span class="badge g">Ano</span></td>
+        <td><span class="badge g">Ano</span></td>
+        <td style="background:rgba(201,168,76,0.07);"><span class="badge g">Ano (dluhopisy/tiché sp.)</span></td>
+      </tr>
+      <tr>
+        <td>Audit</td>
+        <td><span class="badge g">Není povinný</span></td>
+        <td><span class="badge a">Povinný</span></td>
+        <td><span class="badge r">Povinný</span></td>
+        <td>Dle jurisdikce</td>
+        <td style="background:rgba(201,168,76,0.07);"><span class="badge g">Dle NF zákona</span></td>
+      </tr>
+      <tr>
+        <td>Depozitář</td>
+        <td><span class="badge g">Není</span></td>
+        <td><span class="badge r">Povinný</span></td>
+        <td><span class="badge r">Povinný</span></td>
+        <td>Smart contract</td>
+        <td style="background:rgba(201,168,76,0.07);"><span class="badge g">Není potřeba</span></td>
+      </tr>
+      <tr><td class="cat" colspan="6">Daně</td></tr>
+      <tr>
+        <td>Daňový režim investora</td>
+        <td>Daní obhospodařovatel průběžně</td>
+        <td>Fond daní 5 %, po 3 letech příjem osvobozen</td>
+        <td>Jako FKI</td>
+        <td>Při výběru do fiat</td>
+        <td style="background:rgba(201,168,76,0.07);">Srážková daň 15 % průběžně; exit po 3 l. osvobozen</td>
+      </tr>
+      <tr><td class="cat" colspan="6">Náklady (bez SW)</td></tr>
+      <tr class="highlight-row">
+        <td>Setup náklad</td>
+        <td>do 1 000 000 Kč</td>
+        <td>do 5 000 000 Kč</td>
+        <td>řádově 100 mil. Kč</td>
+        <td>do 1 500 000 Kč + VASP</td>
+        <td style="background:rgba(201,168,76,0.12);"><strong>SaaS SLA (Mooncher) – bez velkého setupu</strong></td>
+      </tr>
+      <tr>
+        <td>Měsíční SLA</td>
+        <td>Nízký</td>
+        <td>Miliony až desítky</td>
+        <td>Stovky milionů</td>
+        <td>Dle jurisdikce</td>
+        <td style="background:rgba(201,168,76,0.07);">Mooncher SaaS – transparentní</td>
+      </tr>
+      <tr><td class="cat" colspan="6">Vhodnost pro S.T.R.O.M.</td></tr>
+      <tr>
+        <td>Doporučení</td>
+        <td><span class="badge r">Nevhodné</span> (limit 20 inv.)</td>
+        <td><span class="badge a">Fáze 3+</span> (velké instituce)</td>
+        <td><span class="badge r">Nevhodné</span> (náklady)</td>
+        <td><span class="badge a">Zvážit po MiCA</span></td>
+        <td style="background:rgba(201,168,76,0.07);"><span class="badge g">✓ Optimální pro fázi 1–2</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box gold">
+    <strong>Závěr:</strong> Pro přípravnou fázi S.T.R.O.M. (2026–2028) je voucherový model pod Golden Blot NF nejefektivnější volbou. Nevyžaduje souhlas ČNB, je okamžitě realizovatelný, otevřený veřejnosti od 10 000 Kč a technologicky pokrytý platformou Mooncher. ZISIF §272 nebo crypto fond lze zvažovat od fáze 3 (portfoliová škála desítek objektů, institucionální investoři).
+  </div>
+</div>
+
+</main>
+
+<footer class="footer">
+  <strong>Golden Blot cz. Nadační fond</strong> &nbsp;·&nbsp; Kaprova 42/14, Staré Město, 110 00 Praha 1 &nbsp;·&nbsp;
+  Platforma S.T.R.O.M. · srpen 2026 · Orientační model.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── TABS ──
+function setTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick') === `setTab('${name}')`) b.classList.add('active');
+  });
+}
+
+function fmtM(n) { return (Math.round(n/100000)/10).toFixed(1).replace('.',',') + ' mil. Kč'; }
+function fmtK(n) { return Math.round(n).toLocaleString('cs-CZ') + ' Kč'; }
+function fmtPct(n) { return (Math.round(n*10)/10).toFixed(1).replace('.',',') + ' %'; }
+
+// ── INVESTOR CALC ──
+let invChart = null;
+
+function calcInvestor() {
+  const amount = +document.getElementById('inv-amount').value;
+  const years  = +document.getElementById('inv-years').value;
+  const yld    = +document.getElementById('inv-yield').value / 100;
+  const appre  = +document.getElementById('inv-appre').value / 100;
+  const exit   = +document.getElementById('inv-exit').value;
+
+  document.getElementById('inv-amount-out').textContent = amount.toLocaleString('cs-CZ') + ' Kč';
+  document.getElementById('inv-years-out').textContent  = years + ' let';
+  document.getElementById('inv-yield-out').textContent  = (+document.getElementById('inv-yield').value).toFixed(1).replace('.',',') + ' %';
+  document.getElementById('inv-appre-out').textContent  = (+document.getElementById('inv-appre').value).toFixed(1).replace('.',',') + ' %';
+  document.getElementById('inv-exit-out').textContent   = exit === 0 ? 'Převod podílu' : 'Výkup NF';
+
+  // Cumulative
+  let cumRental = 0, cumTotal = 0;
+  const labels = Array.from({length: years}, (_,i) => 'Rok '+(i+1));
+  const rentalData = [], totalData = [];
+  for (let y = 1; y <= years; y++) {
+    cumRental += amount * yld;
+    const propVal = amount * Math.pow(1 + appre, y);
+    cumTotal = cumRental + (propVal - amount);
+    rentalData.push(Math.round(cumRental));
+    totalData.push(Math.round(cumTotal));
+  }
+
+  const totalReturn = totalData[years-1];
+  const totalReturnPct = totalReturn / amount * 100;
+  const annualTotal = Math.pow(1 + totalReturn/amount, 1/years) - 1;
+
+  document.getElementById('inv-result').innerHTML = `
+    <div class="inv-res-item"><div class="inv-res-label">Vloženo</div><div class="inv-res-val">${fmtK(amount)}</div><div class="inv-res-sub">jednorázový vklad</div></div>
+    <div class="inv-res-item"><div class="inv-res-label">Výnos z nájmu (${years} let)</div><div class="inv-res-val">${fmtK(Math.round(cumRental))}</div><div class="inv-res-sub">${fmtPct(yld*100)} × ${years} let</div></div>
+    <div class="inv-res-item"><div class="inv-res-label">Zhodnocení nemovitosti</div><div class="inv-res-val">${fmtK(Math.round(totalReturn - cumRental))}</div><div class="inv-res-sub">při ${fmtPct(appre*100)} p.a.</div></div>
+    <div class="inv-res-item"><div class="inv-res-label">Celkový výnos</div><div class="inv-res-val">${fmtK(Math.round(totalReturn))}</div><div class="inv-res-sub">${fmtPct(totalReturnPct)} · ${fmtPct(annualTotal*100)} p.a.</div></div>
+  `;
+
+  const lg = document.getElementById('inv-legend');
+  lg.innerHTML = `
+    <span class="legend-item"><span class="legend-dot" style="background:#C9A84C"></span>Nájem</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Celkem</span>
+  `;
+
+  if (invChart) invChart.destroy();
+  invChart = new Chart(document.getElementById('invChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Nájemní výnos', data: rentalData.map(v=>Math.round(v/1000)/1000), borderColor:'#C9A84C', backgroundColor:'rgba(201,168,76,0.08)', fill:true, tension:0.4, pointRadius:3, borderWidth:2 },
+        { label:'Celkový výnos', data: totalData.map(v=>Math.round(v/1000)/1000), borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,0.06)', fill:true, tension:0.4, pointRadius:3, borderWidth:2.5 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(0)+' tis. Kč' } } },
+      scales: {
+        x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9CA3AF',font:{size:10}}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9CA3AF',font:{size:10},callback:v=>v+' tis.'}}
+      }
+    }
+  });
+}
+
+// ── PROJECT CALC ──
+let projMode = 'novo';
+function setProjMode(m) {
+  projMode = m;
+  document.getElementById('mode-novo').style.background = m==='novo' ? 'var(--navy)' : '#fff';
+  document.getElementById('mode-novo').style.color = m==='novo' ? 'var(--gold-light)' : 'var(--muted)';
+  document.getElementById('mode-reko').style.background = m==='reko' ? 'var(--navy)' : 'transparent';
+  document.getElementById('mode-reko').style.color = m==='reko' ? 'var(--gold-light)' : 'var(--muted)';
+  calcProj();
+}
+
+function calcProj() {
+  const units  = +document.getElementById('p-units').value;
+  const rent   = +document.getElementById('p-rent').value;
+  const occ    = +document.getElementById('p-occ').value / 100;
+  const dotPct = +document.getElementById('p-dot').value / 100;
+  const obecPct= +document.getElementById('p-obec').value / 100;
+
+  document.getElementById('p-units-out').textContent = units + ' bytů';
+  document.getElementById('p-rent-out').textContent  = rent.toLocaleString('cs-CZ') + ' Kč';
+  document.getElementById('p-occ-out').textContent   = Math.round(occ*100) + ' %';
+  document.getElementById('p-dot-out').textContent   = Math.round(dotPct*100) + ' %';
+  document.getElementById('p-obec-out').textContent  = Math.round(obecPct*100) + ' %';
+
+  const nadacePct = Math.max(0, 1 - dotPct - obecPct);
+  document.getElementById('p-nadace-pct').textContent = Math.round(nadacePct*100) + ' %';
+
+  // CAPEX
+  const avgM2 = 42;
+  let capex;
+  if (projMode === 'novo') {
+    const build = units * avgM2 * 46000;
+    capex = build + 8000000 + 4000000 + 2500000 + (build + 14500000) * 0.10;
+  } else {
+    const build = units * avgM2 * 32000;
+    capex = build + 3500000 + 2500000 + 1200000 + (build + 7200000) * 0.15;
+  }
+
+  const dotAmt  = capex * dotPct;
+  const obecAmt = capex * obecPct;
+  const nadAmt  = capex * nadacePct;
+  const bridgeAmt = dotAmt + obecAmt;
+  const bridgeCost = bridgeAmt * 0.055 * 1.5; // 5.5% × 18 měsíců
+
+  // OPEX
+  const staffBase = 2160000 + Math.max(0, Math.floor((units-20)/10)) * 380000;
+  const energy = 420000 * units/30;
+  const food   = 720000 * units/30;
+  const maint  = 480000 * units/30;
+  const opex   = staffBase + 300000 + energy + food + maint;
+
+  // Revenue
+  const active = units * occ;
+  const rentRev = active * rent * 12;
+  const careRev = active * rent * 0.33 * 12;
+  const stateRev= active * 3500 * 12;
+  const totalRev= rentRev + careRev + stateRev + 500000;
+  const surplus = totalRev - opex;
+
+  // Metrics
+  const novoCapex = (() => {
+    const b = units*42*46000; return b+8000000+4000000+2500000+(b+14500000)*0.10;
+  })();
+  const savingHtml = projMode==='reko' ? `<div class="saving">↓ ${fmtM(novoCapex - capex)} vs. novostavba</div>` : '';
+
+  document.getElementById('p-metrics').innerHTML = `
+    <div class="metric accent"><div class="metric-label">CAPEX projektu</div><div class="metric-val">${fmtM(capex)}</div><div class="metric-sub">${projMode==='reko'?'rekonstrukce':'novostavba'} · ${units} bytů</div>${savingHtml}</div>
+    <div class="metric"><div class="metric-label">Roční příjmy</div><div class="metric-val pos">${fmtM(totalRev)}</div><div class="metric-sub">při ${Math.round(occ*100)} % obsazenosti</div></div>
+    <div class="metric"><div class="metric-label">Roční OPEX</div><div class="metric-val">${fmtM(opex)}</div><div class="metric-sub">bez splátky úvěru</div></div>
+    <div class="metric"><div class="metric-label">Provozní přebytek</div><div class="metric-val ${surplus>=0?'pos':'neg'}">${fmtM(surplus)}</div><div class="metric-sub">${surplus>=0?'ročně':'⚠ ztrátový'}</div></div>
+    <div class="metric"><div class="metric-label">Nadační podíl (vouchery)</div><div class="metric-val ${nadacePct<=0.15?'pos':'neg'}">${fmtM(nadAmt)}</div><div class="metric-sub">${Math.round(nadacePct*100)} % z CAPEX</div></div>
+    <div class="metric"><div class="metric-label">Bridge úrok (1×)</div><div class="metric-val">${fmtM(bridgeCost)}</div><div class="metric-sub">18 měs. @ 5,5 % – splacen z dotací</div></div>
+  `;
+
+  document.getElementById('p-fintable').innerHTML = `
+    <div class="fin-col">
+      <div class="fin-col-title"><div class="dot" style="background:#1D9E75"></div>Roční příjmy</div>
+      <div class="fin-row"><span>Nájem + služby</span><span>${fmtM(rentRev)}</span></div>
+      <div class="fin-row"><span>Úhrada za péči</span><span>${fmtM(careRev)}</span></div>
+      <div class="fin-row"><span>Příspěvek na péči (stát)</span><span>${fmtM(stateRev)}</span></div>
+      <div class="fin-row"><span>Provozní dotace</span><span>${fmtM(500000)}</span></div>
+      <div class="fin-row"><span>Celkem</span><span>${fmtM(totalRev)}</span></div>
+    </div>
+    <div class="fin-col">
+      <div class="fin-col-title"><div class="dot" style="background:#D85A30"></div>Financování CAPEX</div>
+      <div class="fin-row"><span>Státní dotace (${Math.round(dotPct*100)} %)</span><span>${fmtM(dotAmt)}</span></div>
+      <div class="fin-row"><span>Dotace obec/kraj (${Math.round(obecPct*100)} %)</span><span>${fmtM(obecAmt)}</span></div>
+      <div class="fin-row fin-row gold"><span>↻ Vouchery / Bakaláři (${Math.round(nadacePct*100)} %)</span><span>${fmtM(nadAmt)}</span></div>
+      <div class="fin-row"><span>Bridge úrok (1×)</span><span>${fmtM(bridgeCost)}</span></div>
+      <div class="fin-row"><span>Splátka v provozu</span><span>0 Kč ✓</span></div>
+    </div>
+  `;
+
+  const tags = [];
+  if (surplus > 0)         tags.push(['green','✓','Projekt je provozně udržitelný']);
+  else                      tags.push(['red','✗','Projekt je provozně ztrátový']);
+  tags.push(['green','✓','Splátka úvěru 0 Kč – bridge splacen z dotací']);
+  if ((dotPct+obecPct)>=0.8) tags.push(['green','✓',`Dotace ${Math.round((dotPct+obecPct)*100)} % CAPEX ✓`]);
+  else                       tags.push(['amber','!','Dotace < 80 % – zvýšit podíl veřejné podpory']);
+  if (nadacePct<=0.15)     tags.push(['green','✓',`Nadační/voucherový podíl ${Math.round(nadacePct*100)} % ≤ 15 %`]);
+  else                      tags.push(['amber','!',`Nadační podíl ${Math.round(nadacePct*100)} % – nad cílem`]);
+  if (occ>=0.85)           tags.push(['green','✓',`Obsazenost ${Math.round(occ*100)} % – zdravá`]);
+  else                      tags.push(['amber','!','Obsazenost < 85 % – riziko v 1. roce']);
+  if (projMode==='reko')   tags.push(['blue','✓','Obecní budova – úspora vs. novostavba']);
+
+  document.getElementById('p-tags').innerHTML = tags.map(([cls,icon,label]) =>
+    `<span class="tag ${cls}">${icon} ${label}</span>`).join('');
+}
+
+// ── INIT ──
+calcInvestor();
+calcProj();
+</script>
+</body>
+</html>
